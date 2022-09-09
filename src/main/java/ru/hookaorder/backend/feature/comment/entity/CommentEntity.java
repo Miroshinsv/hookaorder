@@ -1,41 +1,33 @@
 package ru.hookaorder.backend.feature.comment.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import ru.hookaorder.backend.feature.BaseEntity;
+import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
+import ru.hookaorder.backend.feature.user.entity.UserEntity;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "comment")
 @Data
-public class CommentEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class CommentEntity extends BaseEntity {
 
-    @Column(name = "owner_id", nullable = false)
-    private Long ownerId;
+    @ManyToOne
+    @JoinColumn
+    @JsonProperty(value = "owner_id")
+    private UserEntity ownerId;
+    @ManyToOne
+    @JoinColumn
+    @JsonProperty(value = "place_id")
+    private PlaceEntity placeId;
+    @ManyToOne
+    @JoinColumn
+    @JsonProperty(value = "user_id")
+    private UserEntity userId;
     @Column(name = "comment", nullable = false)
     private String comment;
     @Column(name = "is_publish")
+    @JsonProperty(value = "is_publish")
     private Boolean isPublish = true;
-
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
-
-    @PrePersist
-    void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
-
 }

@@ -1,5 +1,6 @@
 package ru.hookaorder.backend.feature.user.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.springframework.lang.Nullable;
 import ru.hookaorder.backend.feature.BaseEntity;
@@ -30,7 +31,17 @@ public class UserEntity extends BaseEntity {
     @Column(name = "password", nullable = false)
     private String password;
 
+    @JsonIgnore
+    public String getPassword() {
+        return password;
+    }
+
     @ManyToMany
     @JoinColumn
     private Set<RoleEntity> rolesSet;
+
+    @JsonIgnore
+    public Set<RoleEntity> getRolesSet() {
+        return rolesSet;
+    }
 }

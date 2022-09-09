@@ -1,6 +1,6 @@
 package ru.hookaorder.backend.feature.comment.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.hookaorder.backend.feature.comment.entity.CommentEntity;
@@ -8,11 +8,12 @@ import ru.hookaorder.backend.feature.comment.repository.CommentRepository;
 
 import java.util.List;
 
+@AllArgsConstructor
 @RestController
 @RequestMapping(value = "/comment")
-public class CommentController {
-    @Autowired
-    private CommentRepository commentRepository;
+public class CommentController{
+
+    private final CommentRepository commentRepository;
 
     @GetMapping("/get/{id}")
     ResponseEntity<CommentEntity> getCommentById(@PathVariable Long id){
@@ -30,11 +31,14 @@ public class CommentController {
         return ResponseEntity.ok(commentRepository.save(commentEntity));
     }
 
-    @PutMapping("/update")
-    ResponseEntity<CommentEntity> updateComment(@RequestBody CommentEntity commentEntity){
+    @PutMapping("/update/{id}")
+    ResponseEntity<CommentEntity> updateComment(@PathVariable Long id, @RequestBody CommentEntity commentEntity){
         return commentRepository
-                .findById(commentEntity.getId())
-                .map((val) -> ResponseEntity.ok(commentRepository.save(commentEntity)))
+                .findById(id)
+                .map((val) ->
+                {
+                    commentEntity.setId(id);
+                    return ResponseEntity.ok(commentRepository.save(commentEntity));})
                 .orElse(ResponseEntity.badRequest().build());
     }
 }
