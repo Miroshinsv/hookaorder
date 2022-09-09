@@ -2,6 +2,7 @@ package ru.hookaorder.backend.feature.order.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -15,8 +16,8 @@ public class OrderEntity {
     private long id;
 
     @ManyToOne
-    @JoinColumn(name = "place_id ", referencedColumnName = "id", nullable = false)
-    private Long placeId;
+    @JoinColumn(name = "places_id", referencedColumnName = "id", nullable = false)
+    private PlaceEntity placeId;
 
 //    @ManyToOne
 //    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)

@@ -1,9 +1,6 @@
 package ru.hookaorder.backend.feature.address.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
-import org.hibernate.annotations.SQLDelete;
-import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
