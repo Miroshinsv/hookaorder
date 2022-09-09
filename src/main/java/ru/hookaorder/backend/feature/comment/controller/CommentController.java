@@ -31,8 +31,10 @@ public class CommentController {
     }
 
     @PutMapping("/update")
-    ResponseEntity<CommentEntity> updateComment(@PathVariable Long id){
-        return commentRepository.findById(id).map((val) -> ResponseEntity.ok(commentRepository.save(val)))
+    ResponseEntity<CommentEntity> updateComment(@RequestBody CommentEntity commentEntity){
+        return commentRepository
+                .findById(commentEntity.getId())
+                .map((val) -> ResponseEntity.ok(commentRepository.save(commentEntity)))
                 .orElse(ResponseEntity.badRequest().build());
     }
 }
