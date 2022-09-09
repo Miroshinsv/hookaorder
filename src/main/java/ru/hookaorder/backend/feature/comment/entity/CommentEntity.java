@@ -11,15 +11,14 @@ import java.time.LocalDateTime;
 public class CommentEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
     private Long id;
 
     @Column(name = "owner_id", nullable = false)
     private Long ownerId;
     @Column(name = "comment", nullable = false)
     private String comment;
-    @Column(name = "is_publish", columnDefinition = "default 'thue'")
-    private Boolean isPublish;
+    @Column(name = "is_publish")
+    private Boolean isPublish = true;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

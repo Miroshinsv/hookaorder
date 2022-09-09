@@ -2,7 +2,6 @@ package ru.hookaorder.backend.feature.comment.repository;
 
 import org.springframework.data.repository.CrudRepository;
 import ru.hookaorder.backend.feature.comment.entity.CommentEntity;
-import ru.hookaorder.backend.feature.order.entity.OrderEntity;
 
 import java.util.List;
 import java.util.Optional;

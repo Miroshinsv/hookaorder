@@ -1,5 +1,6 @@
 package ru.hookaorder.backend.feature.comment.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.hookaorder.backend.feature.comment.entity.CommentEntity;
@@ -10,6 +11,7 @@ import java.util.List;
 @RestController
 @RequestMapping(value = "/comment")
 public class CommentController {
+    @Autowired
     private CommentRepository commentRepository;
 
     @GetMapping("/get/{id}")
@@ -28,7 +30,7 @@ public class CommentController {
         return ResponseEntity.ok(commentRepository.save(commentEntity));
     }
 
-    @PostMapping("/ubdete")
+    @PutMapping("/update")
     ResponseEntity<CommentEntity> updateComment(@PathVariable Long id){
         return commentRepository.findById(id).map((val) -> ResponseEntity.ok(commentRepository.save(val)))
                 .orElse(ResponseEntity.badRequest().build());
