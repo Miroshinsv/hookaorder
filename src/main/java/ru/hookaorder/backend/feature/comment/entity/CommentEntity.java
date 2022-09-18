@@ -1,7 +1,8 @@
 package ru.hookaorder.backend.feature.comment.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import ru.hookaorder.backend.feature.BaseEntity;
 import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
 import ru.hookaorder.backend.feature.user.entity.UserEntity;
@@ -10,7 +11,8 @@ import javax.persistence.*;
 
 @Entity
 @Table(name = "comment")
-@Data
+@Getter
+@Setter
 public class CommentEntity extends BaseEntity {
 
     @ManyToOne

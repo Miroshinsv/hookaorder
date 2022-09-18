@@ -28,7 +28,15 @@ public class CommentController{
 
     @PostMapping("/create")
     ResponseEntity<CommentEntity> createComment(@RequestBody CommentEntity commentEntity){
-        return ResponseEntity.ok(commentRepository.save(commentEntity));
+        if (commentEntity.getPlaceId().getId() != null && commentEntity.getOwnerId().getId() != null && commentEntity.getUserId().getId() != null) {
+            if (commentEntity.getPlaceId().getId() == null || commentEntity.getOwnerId().getId() == null || commentEntity.getUserId().getId() != null)
+                    return ResponseEntity.ok(commentRepository.save(commentEntity));
+            if (commentEntity.getOwnerId().getId() != null || commentEntity.getUserId().getId() == null)
+                    return ResponseEntity.ok(commentRepository.save(commentEntity));
+            if (commentEntity.getPlaceId().getId() != null)
+                return ResponseEntity.ok(commentRepository.save(commentEntity));
+        }
+        return ResponseEntity.badRequest().build();
     }
 
     @PutMapping("/update/{id}")
