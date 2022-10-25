@@ -24,6 +24,8 @@ jobs:
           tags: dockerwell/hookaorder-backend:${{  github.ref_name }}
   deploy:
     runs-on: ubuntu-latest
+    needs: docker
+    if: ${{ success() }}
     steps:
     - name: Deploy to Docker Host
       uses: wshihadeh/docker-deployment-action@v2
