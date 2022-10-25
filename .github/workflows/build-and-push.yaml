@@ -22,3 +22,16 @@ jobs:
         with:
           push: true
           tags: dockerwell/hookaorder-backend:${{  github.ref_name }}
+  deploy:
+    steps:
+    - name: Deploy to Docker Host
+      uses: wshihadeh/docker-deployment-action@v2
+      with:
+        remote_docker_host: deployer@95.163.242.79
+        ssh_private_key: ${{ secrets.DOCKER_SSH_PRIVATE_KEY }}
+        ssh_public_key: ${{ secrets.DOCKER_SSH_PUBLIC_KEY }}
+        deployment_mode: docker-compose
+        args: up -d java-backend
+        docker_prune: 'true'
+        pull_images_first: 'true'
+        pre_deployment_command_args: JBV=${{  github.ref_name }} INPUT_STACK_FILE_NAME=/opt/staging/docker-compose.yaml
