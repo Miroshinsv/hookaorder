@@ -4,10 +4,10 @@ set -eu
 echo "Registering SSH keys..."
 mkdir -p ~/.ssh
 
-printf '%s\n' "$PRKEY" > ~/.ssh/id_rsa
+printf '%s' "$PRKEY" > ~/.ssh/id_rsa
 chmod 600 ~/.ssh/id_rsa
 
-printf '%s\n' "$PBKEY" > ~/.ssh/id_rsa.pub
+printf '%s' "$PBKEY" > ~/.ssh/id_rsa.pub
 chmod 600 ~/.ssh/id_rsa.pub
 
 eval $(ssh-agent)
