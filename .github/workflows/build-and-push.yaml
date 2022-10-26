@@ -36,4 +36,5 @@ jobs:
     - name: Checkout deploy config
       uses: actions/checkout@v3
     - name: Deploy to Docker Host
-      run: ./github/scripts/deploy.sh
+      run: ./.github/scripts/deploy.sh
+      shell: bash
