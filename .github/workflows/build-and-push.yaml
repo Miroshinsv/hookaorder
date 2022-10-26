@@ -29,9 +29,9 @@ jobs:
     #needs: docker
     if: ${{ success() }}
     env:
-      #PRKEY="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDO38yfNu89J0a4BBV8BjGsQzYRkNtwl05yBJK1tcGhZBWlWMYb0eyJXy08JIJRcQq/4jKzKUip70iBi3QMtmpCT/VV4hb88BAMV6bzd+5MxvnSQZWykl9JfxNbECssvlWwvDjVoKcgLIk0IjNmmH2CNB6V7g6+DCvgxGV7SQGUoYxsc4awfzKAvM8fVLkZCV4BpLF/G0CaAIc7/F6+ms7lr/gSiU8FIQ9AsBYiJTTFcLjwItDn0JaLFv1WdmfsBVBwzz7SIw3nRRiwKe3eOw8E6w/V4DlGr4+ym89zX0I6kQkX0QUR5h/pg2p7NPAbMN0TBe+MPGZ8s5MEQ8wfuTEtkRZbDaNuPmhUsQXfJlMCW+qFnIwmt0vriFXBLbiI+YGao+fo5SX7fcwZNdIBUKAp+8UmFAu8utQiLkqkYpC518iKIuORcCHuYQPd4phE06d85JhyY0wRvM9bpmpliTyfOlm1gM3cHIKelrWthEg5AEH9Es/wHTa2g31/hKT4Tfs="
-      #PBKEY="${{ secrets.DOCKER_SSH_PUBLIC_KEY }}"
-      REF="wip"
+      PRKEY: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDO38yfNu89J0a4BBV8BjGsQzYRkNtwl05yBJK1tcGhZBWlWMYb0eyJXy08JIJRcQq/4jKzKUip70iBi3QMtmpCT/VV4hb88BAMV6bzd+5MxvnSQZWykl9JfxNbECssvlWwvDjVoKcgLIk0IjNmmH2CNB6V7g6+DCvgxGV7SQGUoYxsc4awfzKAvM8fVLkZCV4BpLF/G0CaAIc7/F6+ms7lr/gSiU8FIQ9AsBYiJTTFcLjwItDn0JaLFv1WdmfsBVBwzz7SIw3nRRiwKe3eOw8E6w/V4DlGr4+ym89zX0I6kQkX0QUR5h/pg2p7NPAbMN0TBe+MPGZ8s5MEQ8wfuTEtkRZbDaNuPmhUsQXfJlMCW+qFnIwmt0vriFXBLbiI+YGao+fo5SX7fcwZNdIBUKAp+8UmFAu8utQiLkqkYpC518iKIuORcCHuYQPd4phE06d85JhyY0wRvM9bpmpliTyfOlm1gM3cHIKelrWthEg5AEH9Es/wHTa2g31/hKT4Tfs="
+      PBKEY: "${{ secrets.DOCKER_SSH_PUBLIC_KEY }}"
+      REF: "wip"
     steps:
     - name: Checkout deploy config
       uses: actions/checkout@v3
