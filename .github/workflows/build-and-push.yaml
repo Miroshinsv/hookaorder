@@ -1,8 +1,10 @@
 name: 'Checkout project & make Docker image & push'
 on:
   push:
-    tags:
-      - '*'
+    branches:
+      - 'hoxfix/actions-deploy-fix'
+    #tags:
+    #  - '*'
 
 jobs:
   docker:
@@ -27,16 +29,7 @@ jobs:
     needs: docker
     if: ${{ success() }}
     steps:
+    - name: Checkout deploy config
+      uses: actions/checkout@v3
     - name: Deploy to Docker Host
-      run: |
-        echo "Registering SSH keys..."
-        mkdir -p ~/.ssh
-        printf '%s\n' ${{ secrets.DOCKER_SSH_PRIVATE_KEY }} > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        printf '%s\n' ${{ secrets.DOCKER_SSH_PUBLIC_KEY }} > ~/.ssh/id_rsa.pub
-        chmod 600 ~/.ssh/id_rsa.pub
-        eval $(ssh-agent)
-        ssh-add ~/.ssh/id_rsa
-        echo "Add known hosts"
-        printf '%s %s\n' "95.163.242.79" "${{ secrets.DOCKER_SSH_PUBLIC_KEY }}" > /etc/ssh/ssh_known_hosts
-        ssh deployer@95.163.242.79 "JBTAG=${{ github.ref_name }} docker compose -f /opt/staging/docker-compose.yaml up -d java-backend"
+      run: PRKEY=`${{ secrets.DOCKER_SSH_PRIVATE_KEY }}` PBKEY=`${{ secrets.DOCKER_SSH_PUBLIC_KEY }}` REF=`${{ github.ref_name }}` ./github/scripts/deploy.sh
