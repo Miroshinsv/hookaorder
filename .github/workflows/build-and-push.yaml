@@ -1,40 +1,39 @@
 name: 'Checkout project & make Docker image & push'
 on:
   push:
-    branches:
-      - 'hoxfix/actions-deploy-fix'
-    #tags:
-    #  - '*'
+    tags:
+      - '*'
 
 jobs:
-  #docker:
-  #  runs-on: ubuntu-latest
-  #  steps:
-  #    - name: Set up QEMU
-  #      uses: docker/setup-qemu-action@v2
-  #    - name: Set up Docker Buildx
-  #      uses: docker/setup-buildx-action@v2
-  #    - name: Login to Docker Hub
-  #      uses: docker/login-action@v2
-  #      with:
-  #        username: ${{ secrets.DOCKERHUB_USERNAME }}
-  #        password: ${{ secrets.DOCKERHUB_TOKEN }}
-  #    - name: Build and push
-  #      uses: docker/build-push-action@v3
-  #      with:
-  #        push: true
-  #        tags: dockerwell/hookaorder-backend:wip
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: dockerwell/hookaorder-backend:${{  github.ref_name }}
   deploy:
     runs-on: ubuntu-latest
-    #needs: docker
+    needs: docker
     if: ${{ success() }}
-    env:
-      PRKEY: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDO38yfNu89J0a4BBV8BjGsQzYRkNtwl05yBJK1tcGhZBWlWMYb0eyJXy08JIJRcQq/4jKzKUip70iBi3QMtmpCT/VV4hb88BAMV6bzd+5MxvnSQZWykl9JfxNbECssvlWwvDjVoKcgLIk0IjNmmH2CNB6V7g6+DCvgxGV7SQGUoYxsc4awfzKAvM8fVLkZCV4BpLF/G0CaAIc7/F6+ms7lr/gSiU8FIQ9AsBYiJTTFcLjwItDn0JaLFv1WdmfsBVBwzz7SIw3nRRiwKe3eOw8E6w/V4DlGr4+ym89zX0I6kQkX0QUR5h/pg2p7NPAbMN0TBe+MPGZ8s5MEQ8wfuTEtkRZbDaNuPmhUsQXfJlMCW+qFnIwmt0vriFXBLbiI+YGao+fo5SX7fcwZNdIBUKAp+8UmFAu8utQiLkqkYpC518iKIuORcCHuYQPd4phE06d85JhyY0wRvM9bpmpliTyfOlm1gM3cHIKelrWthEg5AEH9Es/wHTa2g31/hKT4Tfs="
-      PBKEY: "${{ secrets.DOCKER_SSH_PUBLIC_KEY }}"
-      REF: "wip"
     steps:
-    - name: Checkout deploy config
-      uses: actions/checkout@v3
-    - name: Deploy to Docker Host
-      run: ./.github/scripts/deploy.sh
-      shell: bash
+      - name: "Trigger jenkins job"
+        uses: GoldenspearLLC/build-jenkins-job@master
+        with:
+          jenkins-url: "http://http://95.163.242.79:8081"
+          jenkins-token: "11ba1b2e0d8f1085cf1726a5884b64d669"
+          user: "deployer"
+          job-path: "job/Backend/job/JavaBackEnd"
+          job-params: "{'JBTAG': '${{  github.ref_name }}'}"
+      - name: Get job status
+        run: echo "Job status is ${{ steps.job-build.outputs.job_status }}"
