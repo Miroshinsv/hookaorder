@@ -28,12 +28,6 @@ jobs:
     if: ${{ success() }}
     steps:
       - name: "Trigger jenkins job"
-        uses: GoldenspearLLC/build-jenkins-job@master
+        uses: wei/curl@v1
         with:
-          jenkins-url: "http://http://95.163.242.79:8081"
-          jenkins-token: "11ba1b2e0d8f1085cf1726a5884b64d669"
-          user: "deployer"
-          job-path: "job/Backend/job/JavaBackEnd"
-          job-params: "{'JBTAG': '${{  github.ref_name }}'}"
-      - name: Get job status
-        run: echo "Job status is ${{ steps.job-build.outputs.job_status }}"
+          args: "-X POST -u deployer:11ba1b2e0d8f1085cf1726a5884b64d669 http://95.163.242.79:8081/job/Backend/job/JavaBackEnd/buildWithParameters --header 'Jenkins-Crumb: c76199d00eb013983738fc4df2450ca41c88e6850ac02850d7e1c95ac8e35f8f' --form 'JBTAG=\"${{  github.ref_name }}\"'"
