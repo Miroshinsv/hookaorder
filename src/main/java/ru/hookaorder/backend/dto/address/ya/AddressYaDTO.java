@@ -1,14 +1,11 @@
 
 package ru.hookaorder.backend.dto.address.ya;
 
-import javax.annotation.Generated;
-import com.google.gson.annotations.Expose;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Generated("net.hexar.json2pojo")
-@SuppressWarnings("unused")
 public class AddressYaDTO {
 
-    @Expose
+    @JsonProperty("response")
     private Response response;
 
     public Response getResponse() {

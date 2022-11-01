@@ -2,21 +2,18 @@
 package ru.hookaorder.backend.dto.address.ya;
 
 import java.util.List;
-import javax.annotation.Generated;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
 
-@Generated("net.hexar.json2pojo")
-@SuppressWarnings("unused")
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Address {
 
-    @SerializedName("Components")
+    @JsonProperty("Components")
     private List<Component> components;
-    @SerializedName("country_code")
+    @JsonProperty("country_code")
     private String countryCode;
-    @Expose
+    @JsonProperty("formatted")
     private String formatted;
-    @SerializedName("postal_code")
+    @JsonProperty("postal_code")
     private String postalCode;
 
     public List<Component> getComponents() {

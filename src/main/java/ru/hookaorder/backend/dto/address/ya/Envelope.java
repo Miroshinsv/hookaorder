@@ -1,16 +1,13 @@
 
 package ru.hookaorder.backend.dto.address.ya;
 
-import javax.annotation.Generated;
-import com.google.gson.annotations.Expose;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Generated("net.hexar.json2pojo")
-@SuppressWarnings("unused")
 public class Envelope {
 
-    @Expose
+    @JsonProperty("lowerCorner")
     private String lowerCorner;
-    @Expose
+    @JsonProperty("upperCorner")
     private String upperCorner;
 
     public String getLowerCorner() {

@@ -1,16 +1,13 @@
 
 package ru.hookaorder.backend.dto.address.ya;
 
-import javax.annotation.Generated;
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Generated("net.hexar.json2pojo")
-@SuppressWarnings("unused")
 public class MetaDataProperty {
 
-    @SerializedName("GeocoderMetaData")
+    @JsonProperty("GeocoderMetaData")
     private GeocoderMetaData geocoderMetaData;
-    @SerializedName("GeocoderResponseMetaData")
+    @JsonProperty("GeocoderResponseMetaData")
     private GeocoderResponseMetaData geocoderResponseMetaData;
 
     public GeocoderMetaData getGeocoderMetaData() {

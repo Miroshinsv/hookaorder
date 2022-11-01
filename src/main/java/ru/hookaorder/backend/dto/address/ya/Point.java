@@ -1,14 +1,11 @@
 
 package ru.hookaorder.backend.dto.address.ya;
 
-import javax.annotation.Generated;
-import com.google.gson.annotations.Expose;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Generated("net.hexar.json2pojo")
-@SuppressWarnings("unused")
 public class Point {
 
-    @Expose
+    @JsonProperty("pos")
     private String pos;
 
     public String getPos() {

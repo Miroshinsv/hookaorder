@@ -1,17 +1,14 @@
 
 package ru.hookaorder.backend.dto.address.ya;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
-import javax.annotation.Generated;
-import com.google.gson.annotations.Expose;
 
-@Generated("net.hexar.json2pojo")
-@SuppressWarnings("unused")
 public class GeoObjectCollection {
 
-    @Expose
+    @JsonProperty("featureMember")
     private List<FeatureMember> featureMember;
-    @Expose
+    @JsonProperty("metaDataProperty")
     private MetaDataProperty metaDataProperty;
 
     public List<FeatureMember> getFeatureMember() {

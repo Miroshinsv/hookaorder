@@ -1,20 +1,17 @@
 
 package ru.hookaorder.backend.dto.address.ya;
 
-import javax.annotation.Generated;
-import com.google.gson.annotations.Expose;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Generated("net.hexar.json2pojo")
-@SuppressWarnings("unused")
 public class GeocoderResponseMetaData {
 
-    @Expose
+    @JsonProperty("found")
     private String found;
-    @Expose
+    @JsonProperty("request")
     private String request;
-    @Expose
+    @JsonProperty("results")
     private String results;
-    @Expose
+    @JsonProperty("suggest")
     private String suggest;
 
     public String getFound() {

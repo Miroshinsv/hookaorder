@@ -1,23 +1,17 @@
 
 package ru.hookaorder.backend.dto.address.ya;
 
-import javax.annotation.Generated;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Generated("net.hexar.json2pojo")
-@SuppressWarnings("unused")
 public class GeocoderMetaData {
 
-    @SerializedName("Address")
+    @JsonProperty("Address")
     private Address address;
-    @SerializedName("AddressDetails")
-    private AddressDetails addressDetails;
-    @Expose
+    @JsonProperty("kind")
     private String kind;
-    @Expose
+    @JsonProperty("precision")
     private String precision;
-    @Expose
+    @JsonProperty("text")
     private String text;
 
     public Address getAddress() {
@@ -26,14 +20,6 @@ public class GeocoderMetaData {
 
     public void setAddress(Address address) {
         this.address = address;
-    }
-
-    public AddressDetails getAddressDetails() {
-        return addressDetails;
-    }
-
-    public void setAddressDetails(AddressDetails addressDetails) {
-        this.addressDetails = addressDetails;
     }
 
     public String getKind() {

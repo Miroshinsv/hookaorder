@@ -1,16 +1,13 @@
 
 package ru.hookaorder.backend.dto.address.ya;
 
-import javax.annotation.Generated;
-import com.google.gson.annotations.Expose;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Generated("net.hexar.json2pojo")
-@SuppressWarnings("unused")
 public class Component {
 
-    @Expose
+    @JsonProperty("kind")
     private String kind;
-    @Expose
+    @JsonProperty("name")
     private String name;
 
     public String getKind() {

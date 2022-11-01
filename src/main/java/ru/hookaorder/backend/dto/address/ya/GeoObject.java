@@ -1,23 +1,19 @@
 
 package ru.hookaorder.backend.dto.address.ya;
 
-import javax.annotation.Generated;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Generated("net.hexar.json2pojo")
-@SuppressWarnings("unused")
 public class GeoObject {
 
-    @Expose
+    @JsonProperty("boundedBy")
     private BoundedBy boundedBy;
-    @Expose
+    @JsonProperty("description")
     private String description;
-    @Expose
+    @JsonProperty("metaDataProperty")
     private MetaDataProperty metaDataProperty;
-    @Expose
+    @JsonProperty("name")
     private String name;
-    @SerializedName("Point")
+    @JsonProperty("Point")
     private Point point;
 
     public BoundedBy getBoundedBy() {
