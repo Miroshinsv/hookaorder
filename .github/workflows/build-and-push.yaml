@@ -30,4 +30,4 @@ jobs:
       - name: "Trigger jenkins job"
         uses: wei/curl@v1
         with:
-          args: "-X POST -u deployer:11ba1b2e0d8f1085cf1726a5884b64d669 http://95.163.242.79:8081/job/Backend/job/JavaBackEnd/buildWithParameters --header 'Jenkins-Crumb: c76199d00eb013983738fc4df2450ca41c88e6850ac02850d7e1c95ac8e35f8f' --form 'JBTAG=\"${{  github.ref_name }}\"'"
+          args: "-X POST -u deployer:11ba1b2e0d8f1085cf1726a5884b64d669 https://jen.hookahorder.ru/job/Backend/job/JavaBackEnd/buildWithParameters --header 'Jenkins-Crumb: c76199d00eb013983738fc4df2450ca41c88e6850ac02850d7e1c95ac8e35f8f' --form 'JBTAG=\"${{  github.ref_name }}\"'"
