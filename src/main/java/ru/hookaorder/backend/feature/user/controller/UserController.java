@@ -16,11 +16,15 @@ import ru.hookaorder.backend.feature.user.entity.UserEntity;
 import ru.hookaorder.backend.feature.user.repository.UserRepository;
 import ru.hookaorder.backend.utils.NullAwareBeanUtilsBean;
 
+import java.util.Objects;
+
 @RestController
 @RequestMapping(value = "/user")
 @Api(tags = "Контроллер пользователей")
 @AllArgsConstructor
 public class UserController {
+
+    private static final int PASSWORD_LENGTH_VALID = 8;
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
@@ -34,7 +38,12 @@ public class UserController {
     @PostMapping(value = "/create")
     @ApiOperation("Создание пользователя")
     ResponseEntity<?> createUser(@RequestBody UserEntity user) {
-        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+        String password = user.getPassword();
+        if (Objects.isNull(password) || password.length() < PASSWORD_LENGTH_VALID) {
+            return ResponseEntity.badRequest()
+                    .body("Password length shouldn't be less than " + PASSWORD_LENGTH_VALID + " symbols");
+        }
+        user.setPassword(bCryptPasswordEncoder.encode(password));
         return ResponseEntity.ok().body(userRepository.save(user));
     }
 
