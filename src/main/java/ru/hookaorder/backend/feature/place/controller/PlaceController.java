@@ -18,6 +18,7 @@ import ru.hookaorder.backend.utils.CheckOwnerAndRolesAccess;
 import ru.hookaorder.backend.utils.NullAwareBeanUtilsBean;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/place")
@@ -36,7 +37,11 @@ public class PlaceController {
     @GetMapping("/get/my")
     @ApiOperation("Получение моих")
     ResponseEntity<List<PlaceEntity>> getMyPlaces(@PathVariable Long id, Authentication authentication) {
-        return ResponseEntity.ok(placeRepository.findAllByOwnerIdOrStaff(id));
+        return ResponseEntity.ok(placeRepository
+                .findAll()
+                .stream()
+                .filter((val) -> val.getOwner().getId().equals((Long) authentication.getPrincipal()))
+                .collect(Collectors.toList()));
     }
 
     @Where(clause = "deleted_at IS NULL")
