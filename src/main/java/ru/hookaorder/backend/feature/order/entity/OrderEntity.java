@@ -5,10 +5,12 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import ru.hookaorder.backend.feature.BaseEntity;
+import ru.hookaorder.backend.feature.comment.entity.CommentEntity;
 import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
 import ru.hookaorder.backend.feature.user.entity.UserEntity;
 
 import javax.persistence.*;
+import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "orders")
@@ -31,7 +33,8 @@ public class OrderEntity extends BaseEntity {
     @JsonProperty(value = "order_time")
     private String orderTime;
 
-//    @Column(name = "comment")
-//    private String comment;
-
+    @OneToOne(cascade = CascadeType.ALL)
+    @JsonProperty(value = "comment", access = JsonProperty.Access.READ_ONLY)
+    @JoinColumn(name = "comment_id", referencedColumnName = "id")
+    private CommentEntity comment;
 }

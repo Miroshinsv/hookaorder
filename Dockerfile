@@ -1,14 +1,19 @@
-FROM gradle:jdk18-alpine AS build
-COPY --chown=gradle:gradle . /home/gradle/src
-WORKDIR /home/gradle/src
-RUN gradle clean build --no-daemon
+FROM gradle:7.5.1-jdk17-alpine AS build
 
-FROM openjdk:20-slim-buster
+COPY --chown=gradle:gradle . /home/gradle/src
+
+WORKDIR /home/gradle/src
+
+RUN ./gradlew build
+
+FROM openjdk:17-alpine
 
 EXPOSE 8080
 
 RUN mkdir /app
 
-COPY --from=build /home/gradle/src/build/libs/*-boot.jar /app/spring-boot-application.jar
+COPY --from=build /home/gradle/src/build/* /app/
 
-ENTRYPOINT ["java", "-XX:+UnlockExperimentalVMOptions","-jar","/app/spring-boot-application.jar"]
+WORKDIR /app
+
+ENTRYPOINT ["java", "-Dserver.port=8080", "-jar", "/app/backend-0.0.1-SNAPSHOT-boot.jar"]

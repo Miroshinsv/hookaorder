@@ -82,4 +82,15 @@ public class PlaceController {
             return ResponseEntity.badRequest().body("Access denied");
         }).orElse(ResponseEntity.badRequest().body("Place not found"));
     }
+
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'OWNER')")
+    @GetMapping("/ratings/{placeId}")
+    public ResponseEntity<?> getPlaceRatings(@PathVariable Long placeId, Authentication authentication) {
+        return placeRepository.findById(placeId).map((val) -> {
+            if (CheckOwnerAndRolesAccess.isOwnerOrAdmin(val, authentication)) {
+                return ResponseEntity.ok().body(val.getRatings());
+            }
+            return ResponseEntity.badRequest().body("Access denied");
+        }).orElse(ResponseEntity.notFound().build());
+    }
 }

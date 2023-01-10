@@ -1,5 +1,6 @@
 package ru.hookaorder.backend.feature.place.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -7,11 +8,15 @@ import lombok.Setter;
 import org.hibernate.validator.constraints.URL;
 import ru.hookaorder.backend.feature.BaseEntity;
 import ru.hookaorder.backend.feature.address.entity.AddressEntity;
+import ru.hookaorder.backend.feature.rating.entity.RatingEntity;
 import ru.hookaorder.backend.feature.user.entity.UserEntity;
 
 import javax.persistence.*;
 import javax.validation.constraints.Pattern;
+import java.text.DecimalFormat;
+import java.util.Collections;
 import java.util.Set;
+import java.util.stream.DoubleStream;
 
 /**
  * Place entity
@@ -67,4 +72,19 @@ public class PlaceEntity extends BaseEntity {
     @JoinColumn(name = "staff_id", referencedColumnName = "id")
     @JsonProperty(value = "staff", access = JsonProperty.Access.READ_ONLY)
     private Set<UserEntity> staff;
+
+    @OneToMany
+    @JsonIgnore
+    private Set<RatingEntity> ratings = Collections.emptySet();
+
+    @Transient
+    @JsonProperty(value = "rating", access = JsonProperty.Access.READ_ONLY)
+    private Double avgRating;
+
+    @PostLoad
+    public void calculateAvgRating() {
+        avgRating = Double.parseDouble(new DecimalFormat("#.##").format(
+                ratings.stream().flatMapToDouble((val) -> DoubleStream.of(val.getRatingValue())).average()
+                        .orElse(0)).replace(",", "."));
+    }
 }
