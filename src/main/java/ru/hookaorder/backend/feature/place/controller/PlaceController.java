@@ -33,6 +33,12 @@ public class PlaceController {
         return placeRepository.findById(id).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/get/my")
+    @ApiOperation("Получение моих")
+    ResponseEntity<List<PlaceEntity>> getMyPlaces(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(placeRepository.findAllByOwnerIdOrStaff(id));
+    }
+
     @Where(clause = "deleted_at IS NULL")
     @GetMapping("/get/all")
     @ApiOperation("Получение списка всех заведений")
