@@ -9,6 +9,8 @@ import java.util.Optional;
 public interface PlaceRepository extends CrudRepository<PlaceEntity, Long> {
     Optional<PlaceEntity> findById(Long id);
 
+    List<PlaceEntity> findAllByOwnerIdOrStaff(Long id);
+
     List<PlaceEntity> findAll();
 
     void deleteById(Long id);
