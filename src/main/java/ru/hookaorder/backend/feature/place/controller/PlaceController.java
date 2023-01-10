@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import ru.hookaorder.backend.feature.BaseEntity;
 import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
 import ru.hookaorder.backend.feature.place.repository.PlaceRepository;
 import ru.hookaorder.backend.feature.roles.entity.ERole;
@@ -34,13 +35,18 @@ public class PlaceController {
         return placeRepository.findById(id).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/get/my")
-    @ApiOperation("Получение моих")
-    ResponseEntity<List<PlaceEntity>> getMyPlaces(@PathVariable Long id, Authentication authentication) {
+    @GetMapping("/get/assigned")
+    @ApiOperation("Получение моих мест")
+    ResponseEntity<List<PlaceEntity>> getMyPlaces(Authentication authentication) {
         return ResponseEntity.ok(placeRepository
                 .findAll()
                 .stream()
-                .filter((val) -> val.getOwner().getId().equals((Long) authentication.getPrincipal()))
+                .filter((val) -> {
+                    List<Long> stuffIDs = val.getStaff()
+                            .stream().map(BaseEntity::getId).toList();
+                    return val.getOwner().getId().equals(authentication.getPrincipal()) ||
+                            stuffIDs.contains(authentication.getPrincipal());
+                })
                 .collect(Collectors.toList()));
     }
 
