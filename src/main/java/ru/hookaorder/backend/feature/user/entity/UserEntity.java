@@ -46,6 +46,10 @@ public class UserEntity extends BaseEntity {
     @JsonProperty(value = "is_enabled", access = JsonProperty.Access.READ_ONLY)
     private boolean isEnabled = true;
 
+    @Column(name = "fmc_token")
+    @JsonProperty(value = "fmc_token")
+    private String fmcToken;
+
     @ManyToMany
     @JoinColumn
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -65,6 +69,7 @@ public class UserEntity extends BaseEntity {
     @Transient
     @JsonProperty(value = "rating", access = JsonProperty.Access.READ_ONLY)
     private Double avgRating;
+
 
     @PostLoad
     public void calculateAvgRating() {
