@@ -46,9 +46,9 @@ public class UserEntity extends BaseEntity {
     @JsonProperty(value = "is_enabled", access = JsonProperty.Access.READ_ONLY)
     private boolean isEnabled = true;
 
-    @Column(name = "fmc_token")
-    @JsonProperty(value = "fmc_token")
-    private String fmcToken;
+    @Column(name = "fcm_token")
+    @JsonProperty(value = "fcm_token")
+    private String fcmToken;
 
     @ManyToMany
     @JoinColumn

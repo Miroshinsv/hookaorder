@@ -1,6 +1,9 @@
 package ru.hookaorder.backend.feature.order.controller;
 
 
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingException;
+import com.google.firebase.messaging.MulticastMessage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -9,10 +12,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import ru.hookaorder.backend.feature.order.entity.OrderEntity;
 import ru.hookaorder.backend.feature.order.repository.OrderRepository;
+import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
 import ru.hookaorder.backend.feature.place.repository.PlaceRepository;
 import ru.hookaorder.backend.feature.roles.entity.ERole;
 import ru.hookaorder.backend.feature.user.repository.UserRepository;
+import ru.hookaorder.backend.utils.FCMUtils;
 import ru.hookaorder.backend.utils.NullAwareBeanUtilsBean;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/order")
@@ -22,6 +30,8 @@ public class OrderController {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final PlaceRepository placeRepository;
+
+    private final FirebaseMessaging firebaseMessaging;
 
     @GetMapping("/get/{id}")
     @ApiOperation("Получение заказа по id")
@@ -55,7 +65,27 @@ public class OrderController {
 
     @PostMapping("/create")
     @ApiOperation("Создание заказа")
-    ResponseEntity<OrderEntity> createOrder(@RequestBody OrderEntity orderEntity) {
+    ResponseEntity<OrderEntity> createOrder(@RequestBody OrderEntity orderEntity) throws FirebaseMessagingException {
+        PlaceEntity placeId = orderEntity.getPlaceId();
+        if (placeId != null) {
+            PlaceEntity place = placeRepository.findById(placeId.getId()).get();
+
+            List<String> staffTokens = place.getStaff()
+                    .stream()
+                    .map(staff -> staff.getFcmToken())
+                    .collect(Collectors.toList());
+
+            if (place.getOwner() != null) {
+                staffTokens.add(place.getOwner().getFcmToken());
+            }
+            String textMsg = FCMUtils.getOrderMsgText(orderEntity);
+
+            MulticastMessage msg = MulticastMessage.builder()
+                    .addAllTokens(staffTokens)
+                    .putData("Заказ", textMsg)
+                    .build();
+            firebaseMessaging.sendMulticast(msg);
+        }
         return ResponseEntity.ok(orderRepository.save(orderEntity));
     }
 
