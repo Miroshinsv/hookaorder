@@ -14,8 +14,8 @@ import java.io.IOException;
 @Configuration
 public class FCMConfig {
 
-    @Value("${fcm.credentials}")
-    String fcmCredsFile;
+    @Value("${fcm.credentials.file.name}")
+    private String fcmCredsFile;
 
     @Bean
     FirebaseApp firebaseApp() throws IOException {
@@ -25,7 +25,9 @@ public class FCMConfig {
         FirebaseOptions options = FirebaseOptions.builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                 .build();
-
+        System.out.println(">>>>");
+        System.out.println(serviceAccount);
+        System.out.println(">>>>");
         return FirebaseApp.initializeApp(options);
     }
 

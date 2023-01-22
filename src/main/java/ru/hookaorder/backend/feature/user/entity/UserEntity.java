@@ -47,7 +47,7 @@ public class UserEntity extends BaseEntity {
     private boolean isEnabled = true;
 
     @Column(name = "fcm_token")
-    @JsonProperty(value = "fcm_token")
+    @JsonProperty(value = "fcm_token", access = JsonProperty.Access.READ_WRITE)
     private String fcmToken;
 
     @ManyToMany
