@@ -20,7 +20,7 @@ public class FCMConfig {
     @Bean
     FirebaseApp firebaseApp() throws IOException {
         FileInputStream serviceAccount =
-                new FileInputStream(fcmCredsFile);
+                new FileInputStream(FCMConfig.class.getClassLoader().getResource(fcmCredsFile).getPath());
 
         FirebaseOptions options = FirebaseOptions.builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
