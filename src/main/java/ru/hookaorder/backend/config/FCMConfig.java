@@ -25,9 +25,6 @@ public class FCMConfig {
         FirebaseOptions options = FirebaseOptions.builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                 .build();
-        System.out.println(">>>>");
-        System.out.println(serviceAccount);
-        System.out.println(">>>>");
         return FirebaseApp.initializeApp(options);
     }
 
