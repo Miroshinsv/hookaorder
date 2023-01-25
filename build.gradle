@@ -63,7 +63,7 @@ jar {
 
 tasks.compileJava {
     doFirst {
-        new File("${classpath}/service-account.json").text = """
+        new File("$projectDir/src/main/resources/service-account.json").text = """
             {
               "type": "service_account",
               "project_id": "${System.getenv("PROJECT_ID")}",

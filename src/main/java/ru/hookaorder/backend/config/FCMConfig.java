@@ -19,11 +19,9 @@ public class FCMConfig {
 
     @Bean
     FirebaseApp firebaseApp() throws IOException {
-        FileInputStream serviceAccount =
-                new FileInputStream(fcmCredsFile);
-
+        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         FirebaseOptions options = FirebaseOptions.builder()
-                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                .setCredentials(GoogleCredentials.fromStream(classloader.getResourceAsStream(fcmCredsFile)))
                 .build();
         return FirebaseApp.initializeApp(options);
     }
