@@ -23,6 +23,7 @@ public class FCMConfig {
         FirebaseOptions options = FirebaseOptions.builder()
                 .setCredentials(GoogleCredentials.fromStream(classloader.getResourceAsStream(fcmCredsFile)))
                 .build();
+        
         return FirebaseApp.initializeApp(options);
     }
 
