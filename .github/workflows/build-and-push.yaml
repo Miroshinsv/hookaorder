@@ -5,11 +5,11 @@ on:
       - '*'
 
 env:
-  CLIENT_EMAIL: ${{env.CLIENT_EMAIL}}
-  CLIENT_ID: ${{env.CLIENT_ID}}
-  PRIVATE_KEY: ${{env.PRIVATE_KEY}}
-  PRIVATE_KEY_ID: ${{env.PRIVATE_KEY_ID}}
-  PROJECT_ID: ${{env.PROJECT_ID}}
+  CLIENT_EMAIL: ${{ env.CLIENT_EMAIL }}
+  CLIENT_ID: ${{ env.CLIENT_ID }}
+  PRIVATE_KEY: ${{ env.PRIVATE_KEY }}
+  PRIVATE_KEY_ID: ${{ env.PRIVATE_KEY_ID }}
+  PROJECT_ID: ${{ env.PROJECT_ID }}
 
 jobs:
   docker:
