@@ -12,8 +12,8 @@ env:
   PROJECT_ID: ${{ vars.PROJECT_ID }}
 
 jobs:
-  environment: hookaorder
   docker:
+    environment: hookaorder
     runs-on: ubuntu-latest
     steps:
       - name: Use variables
