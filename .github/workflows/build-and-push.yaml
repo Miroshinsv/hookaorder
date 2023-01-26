@@ -18,6 +18,7 @@ jobs:
       - name: Use variables
         run: |
           echo "repository variable : ${{ vars.CLIENT_EMAIL }}"
+          echo "secret variable : ${{ secret.CLIENT_EMAIL }}"
           echo "variable from shell environment : $env_var"
 #      - name: Set up QEMU
 #        uses: docker/setup-qemu-action@v2
