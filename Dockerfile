@@ -4,7 +4,7 @@ COPY --chown=gradle:gradle . /home/gradle/src
 
 WORKDIR /home/gradle/src
 
-RUN cp service-account.json src/main/resources/service-account.json
+RUN cp service-account.json main/resources/service-account.json
 
 RUN ./gradlew build
 
