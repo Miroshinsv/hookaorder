@@ -22,7 +22,7 @@ jobs:
         id: create-json
         uses: jsdaniell/create-json@v1.2.2
         with:
-          name: "credentials.json"
+          name: "service-account.json"
           json: ${{ secrets.HOOKAH_FIREBASE }}
           dir: 'src/main/resources'
       - name: Build and push

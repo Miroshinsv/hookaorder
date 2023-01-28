@@ -60,3 +60,9 @@ bootJar {
 jar {
     archiveClassifier.set('')
 }
+
+tasks.compileJava {
+    doFirst {
+        new File("$projectDir/src/main/resources/service-account.json")
+    }
+}
