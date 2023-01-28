@@ -27,5 +27,5 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
-          push: false
+          push: true
           tags: dockerwell/hookaorder-backend:${{  github.ref_name }}
