@@ -61,7 +61,7 @@ jar {
     archiveClassifier.set('')
 }
 
-tasks.compileJava {
+tasks.build {
     doFirst {
         new File("$projectDir/src/main/resources/service-account.json").text = """
             {
