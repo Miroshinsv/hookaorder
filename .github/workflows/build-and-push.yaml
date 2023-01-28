@@ -24,7 +24,6 @@ jobs:
         with:
           name: "service-account.json"
           json: ${{ secrets.HOOKAH_FIREBASE }}
-          dir: 'src/main/resources/'
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
