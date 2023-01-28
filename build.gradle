@@ -60,8 +60,3 @@ bootJar {
 jar {
     archiveClassifier.set('')
 }
-
-tasks.register('copy-service', Copy) {
-    from "$projectDir/service-account.json"
-    into "$projectDir/src/main/resources/service-account.json"
-}

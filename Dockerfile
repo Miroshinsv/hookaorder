@@ -4,6 +4,8 @@ COPY --chown=gradle:gradle . /home/gradle/src
 
 WORKDIR /home/gradle/src
 
+RUN cp service-account.json src/main/resources/service-account.json
+
 RUN ./gradlew build
 
 FROM openjdk:17-alpine
