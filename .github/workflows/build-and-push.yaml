@@ -20,6 +20,8 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push
         uses: docker/build-push-action@v3
+        run: |
+          echo "GH_REPO: ${{ vars.CLIENT_EMAIL }}"
         with:
           CLIENT_EMAIL: ${{ vars.CLIENT_EMAIL }}
           CLIENT_ID: ${{ vars.CLIENT_ID }}
