@@ -19,14 +19,12 @@ jobs:
 #          username: ${{ secrets.DOCKERHUB_USERNAME }}
 #          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push
-#        uses: docker/build-push-action@v3
-        run: |
-          echo "GH_REPO: ${{ vars.CLIENT_EMAIL }}"
-#        with:
-#          CLIENT_EMAIL: ${{ vars.CLIENT_EMAIL }}
-#          CLIENT_ID: ${{ vars.CLIENT_ID }}
-#          PRIVATE_KEY: ${{ vars.PRIVATE_KEY }}
-#          PRIVATE_KEY_ID: ${{ vars.PRIVATE_KEY_ID }}
-#          PROJECT_ID: ${{ vars.PROJECT_ID }}
-#          push: true
-#          tags: dockerwell/hookaorder-backend:${{  github.ref_name }}
+        uses: isbang/compose-action@v1.4.1
+        env:
+          - CLIENT_EMAIL: ${{ vars.CLIENT_EMAIL }}
+          - CLIENT_ID: ${{ vars.CLIENT_ID }}
+          - PRIVATE_KEY: ${{ vars.PRIVATE_KEY }}
+          - PRIVATE_KEY_ID: ${{ vars.PRIVATE_KEY_ID }}
+          - PROJECT_ID: ${{ vars.PROJECT_ID }}
+        with:
+          compose-file: "./docker-compose.yml"
