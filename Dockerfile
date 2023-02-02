@@ -1,3 +1,9 @@
+FROM springboot-docker-compose-app:latest
+
+ARG TEST_ARG
+
+RUN echo $TEST_ARG
+
 FROM gradle:7.5.1-jdk17-alpine AS build
 
 COPY --chown=gradle:gradle . /home/gradle/src
