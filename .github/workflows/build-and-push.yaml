@@ -1,6 +1,9 @@
 name: 'Checkout project & make Docker image & push'
 
-on: push
+on:
+  push:
+    tags:
+      - '*'
 
 jobs:
   docker:
@@ -19,7 +22,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: dockerwell/hookaorder-backend:latest
+          tags: dockerwell/hookaorder-backend:${{  github.ref_name }}
           # Тут указываем переменные, которые нужно передать в окружение в контейнер
           build-args: TEST_ARG="Test environment"
   deploy:
