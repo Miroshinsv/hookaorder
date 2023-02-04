@@ -1,5 +1,10 @@
 name: 'Checkout project & make Docker image & push'
 
+on:
+  push:
+    branches:
+    - '*'
+
 jobs:
   docker:
     runs-on: ubuntu-latest
