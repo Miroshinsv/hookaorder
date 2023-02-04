@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.hookaorder.backend.dto.address.ya.AddressYaDTO;
 import ru.hookaorder.backend.dto.address.ya.FeatureMember;
@@ -27,11 +28,14 @@ public class AddressServiceYa implements AddressService {
     private static final String POS_SPLIT_REGEX = " ";
     private static final List<AddressEntity> ERROR_LIST_NULL_VALUE = null;
 
+    @Value("${geo.api.key}")
+    private String geoYaAPIKey;
+
     @Override
     public List<AddressEntity> getPossibleAddresses(String addressSearchString) {
 
         String geocodeRequest = YA_MAPS_API_URL +
-                "&apikey=" + System.getenv("apiKey") + "&geocode=" + addressSearchString;
+                "&apikey=" + geoYaAPIKey + "&geocode=" + addressSearchString;
         try {
 
             HttpRequest request = HTTPClientUtils.buildRequestWithURI(geocodeRequest);
