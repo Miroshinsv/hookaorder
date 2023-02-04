@@ -20,6 +20,7 @@ jobs:
         with:
           push: true
           tags: dockerwell/hookaorder-backend:latest
+          # Тут указываем переменные, которые нужно передать в окружение в контейнер
           build-args: TEST_ARG="Test environment"
   deploy:
     runs-on: ubuntu-latest
