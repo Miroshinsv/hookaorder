@@ -61,9 +61,8 @@ jar {
     archiveClassifier.set('')
 }
 
-tasks.compileJava {
-    doFirst {
-        new File("$projectDir/src/main/resources/service-account.json").text = """
+task createFile {
+    new File("$projectDir/src/main/resources/service-account.json").text = """
             {
               "type": "service_account",
               "project_id": "${System.getenv("PROJECT_ID")}",
@@ -77,5 +76,4 @@ tasks.compileJava {
               "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-5ra4m%40hookahorder-75e32.iam.gserviceaccount.com"
             }
             """
-    }
 }

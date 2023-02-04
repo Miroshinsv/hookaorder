@@ -21,9 +21,7 @@ RUN echo $TEST_VAR
 COPY --chown=gradle:gradle . /home/gradle/src
 
 WORKDIR /home/gradle/src
-
-RUN ./gradlew build
-
+RUN ./gradlew createFile
 RUN cp service-account.json main/resources/service-account.json
 
 RUN ./gradlew build
