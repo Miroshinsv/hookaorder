@@ -1,8 +1,4 @@
 name: 'Checkout project & make Docker image & push'
-# on:
-#   push:
-#     tags:
-#       - '*'
 
 jobs:
   docker:
