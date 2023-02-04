@@ -1,9 +1,6 @@
 name: 'Checkout project & make Docker image & push'
 
-on:
-  push:
-    branches:
-    - '*'
+on: push
 
 jobs:
   docker:
