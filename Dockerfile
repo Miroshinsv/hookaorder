@@ -4,7 +4,9 @@ FROM gradle:7.5.1-jdk17-alpine AS build
 
 ARG TEST_ARG
 
-RUN echo $TEST_ARG
+ENV TEST_VAR ${TEST_VAR}
+
+RUN echo $TEST_VAR
 
 COPY --chown=gradle:gradle . /home/gradle/src
 
