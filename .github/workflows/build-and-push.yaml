@@ -19,7 +19,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: dockerwell/hookaorder-backend:${{  github.ref_name }}
+          tags: dockerwell/hookaorder-backend:latest
           build-args: TEST_ARG="Test args"
   deploy:
     runs-on: ubuntu-latest
