@@ -3,10 +3,18 @@ FROM springboot-docker-compose-app:latest
 FROM gradle:7.5.1-jdk17-alpine AS build
 
 # Тут перечисляем аргументы, которые передаем через --build-args
-ARG TEST_ARG
+ARG CLIENT_EMAIL
+ARG CLIENT_ID
+ARG PRIVATE_KEY
+ARG PRIVATE_KEY_ID
+ARG PROJECT_ID
 
-# Тут переприсваиваем аргументы переменным окружения
-ENV TEST_VAR=$TEST_ARG
+ENV CLIENT_EMAIL=$CLIENT_EMAIL
+ENV CLIENT_ID=$CLIENT_ID
+ENV PRIVATE_KEY=$PRIVATE_KEY
+ENV PRIVATE_KEY_ID=$TEST_ARG
+ENV PROJECT_ID=$PROJECT_ID
+
 
 RUN echo $TEST_VAR
 

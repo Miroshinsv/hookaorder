@@ -24,13 +24,9 @@ jobs:
           push: true
           tags: dockerwell/hookaorder-backend:${{  github.ref_name }}
           # Тут указываем переменные, которые нужно передать в окружение в контейнер
-          build-args: TEST_ARG="Test environment"
-  deploy:
-    runs-on: ubuntu-latest
-    needs: docker
-    if: ${{ success() }}
-    steps:
-      - name: "Trigger jenkins job"
-        uses: wei/curl@v1
-        with:
-          args: "-X POST -u deployer:11ba1b2e0d8f1085cf1726a5884b64d669 https://jen.hookahorder.ru/job/Backend/job/JavaBackEnd/buildWithParameters --header 'Jenkins-Crumb: c76199d00eb013983738fc4df2450ca41c88e6850ac02850d7e1c95ac8e35f8f' --form 'JBTAG=\"${{  github.ref_name }}\"'"
+          build-args: |
+            CLIENT_EMAIL= ${{ vars.CLIENT_EMAIL }}
+            CLIENT_ID= ${{ vars.CLIENT_ID }}
+            PRIVATE_KEY= ${{ vars.PRIVATE_KEY }}
+            PRIVATE_KEY_ID= ${{ vars.PRIVATE_KEY_ID }}
+            PROJECT_ID:= ${{ vars.PROJECT_ID }}
