@@ -20,7 +20,9 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Create Service Account file
-        run: 'echo "SERVICE" > src/main/resources/service-account.json'
+        run: |
+          ls -la
+          echo "SERVICE" > src/main/resources/service-account.json
         shell: bash
         env:
           SERVICE: ${{secrets.SERVICE}}
