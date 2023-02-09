@@ -1,12 +1,5 @@
 FROM gradle:7.5.1-jdk17-alpine AS build
 
-
-ENV CLIENT_EMAIL=$CLIENT_EMAIL
-ENV CLIENT_ID=$CLIENT_ID
-ENV PRIVATE_KEY=$PRIVATE_KEY
-ENV PRIVATE_KEY_ID=$VAR_NAME
-ENV PROJECT_ID=$PROJECT_ID
-
 COPY --chown=gradle:gradle . /home/gradle/src
 
 WORKDIR /home/gradle/src

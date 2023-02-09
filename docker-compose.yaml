@@ -2,12 +2,6 @@ version: '2'
 
 services:
   server:
-    environment:
-      - CLIENT_EMAIL = ${CLIENT_EMAIL}
-      - CLIENT_ID = ${CLIENT_ID}
-      - PRIVATE_KEY = ${PRIVATE_KEY}
-      - PRIVATE_KEY_ID = ${PRIVATE_KEY_ID}
-      - PROJECT_ID = ${PROJECT_ID}
     image: 'springboot-docker-compose-app:latest'
     build:
       context: .
