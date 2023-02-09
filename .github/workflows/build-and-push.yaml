@@ -19,6 +19,9 @@ jobs:
 #          username: ${{ secrets.DOCKERHUB_USERNAME }}
 #          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push
+        run: |
+          echo "$vars.CLIENT_EMAIL"
+          echo "$CLIENT_EMAIL"
         uses: isbang/compose-action@v1.4.1
         env:
           CLIENT_EMAIL: ${{ vars.CLIENT_EMAIL }}
