@@ -79,7 +79,8 @@ public class OrderController {
                     .filter(Predicate.not(String::isEmpty))
                     .collect(Collectors.toList());
 
-            if (place.getOwner() != null) {
+            // TODO: Fix this
+            if (place.getOwner() != null && place.getOwner().getFcmToken() != null) {
                 staffTokens.add(place.getOwner().getFcmToken());
             }
             String textMsg = FCMUtils.getOrderMsgText(orderEntity);
