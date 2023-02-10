@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: hookaorder
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -24,9 +26,10 @@ jobs:
         with:
           name: "service-account.json"
           json: ${{ secrets.SERVICE }}
-          dir: ${{ github.workspace }}/src/main/resources/
+          dir: 'src/main/resources/'
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
+          context: .
           push: true
           tags: dockerwell/hookaorder-backend:${{  github.ref_name }}
