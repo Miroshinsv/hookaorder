@@ -20,6 +20,8 @@ import ru.hookaorder.backend.utils.FCMUtils;
 import ru.hookaorder.backend.utils.NullAwareBeanUtilsBean;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @RestController
@@ -73,6 +75,8 @@ public class OrderController {
             List<String> staffTokens = place.getStaff()
                     .stream()
                     .map(staff -> staff.getFcmToken())
+                    .filter(Objects::nonNull)
+                    .filter(Predicate.not(String::isEmpty))
                     .collect(Collectors.toList());
 
             if (place.getOwner() != null) {
