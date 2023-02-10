@@ -1,6 +1,7 @@
 package ru.hookaorder.backend.feature.order.controller;
 
 
+import com.google.firebase.messaging.BatchResponse;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.MulticastMessage;
@@ -89,7 +90,10 @@ public class OrderController {
                     .addAllTokens(staffTokens)
                     .putData("Заказ", textMsg)
                     .build();
-            firebaseMessaging.sendMulticast(msg);
+            BatchResponse response = firebaseMessaging.sendMulticast(msg);
+            System.out.println(response.getSuccessCount() + " messages were sent successfully");
+            System.out.println(response.getFailureCount() + " messages were sent fail");
+            System.out.println(response.getResponses() + " responses");
         }
         return ResponseEntity.ok(orderRepository.save(orderEntity));
     }
