@@ -20,11 +20,11 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: create-json
         id: create-json
-          uses: jsdaniell/create-json@1.1.2
+        uses: jsdaniell/create-json@1.1.2
         with:
           name: "service-account.json"
           json: ${{ secrets.SERVICE }}
-          dir: '${{  github.ref_name }}/src/main/resources/'
+          dir: 'src/'
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
