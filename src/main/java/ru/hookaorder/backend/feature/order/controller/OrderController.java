@@ -14,6 +14,8 @@ import ru.hookaorder.backend.feature.roles.entity.ERole;
 import ru.hookaorder.backend.feature.user.repository.UserRepository;
 import ru.hookaorder.backend.utils.NullAwareBeanUtilsBean;
 
+import java.time.LocalDate;
+
 @RestController
 @RequestMapping(value = "/order")
 @Api(tags = "Контроллер заказов")
@@ -36,19 +38,33 @@ public class OrderController {
 
     @GetMapping("/get/all/{currentPlaceId}")
     @ApiOperation("Получение всех заказов")
-    ResponseEntity<?> getAllOrders(@PathVariable Long currentPlaceId, Authentication authentication) {
+    ResponseEntity<?> getAllOrders(@PathVariable Long currentPlaceId,
+                                   @RequestParam(name = "new", defaultValue = "false") Boolean newOnly,
+                                   Authentication authentication) {
         var roles = authentication.getAuthorities();
         if (roles.contains(ERole.ADMIN)) {
+            if (newOnly) {
+                return ResponseEntity.ok().body(orderRepository.findNewByPlaceId(placeRepository.findById(currentPlaceId).get()));
+            }
             return ResponseEntity.ok().body(orderRepository.findAllByPlaceId(placeRepository.findById(currentPlaceId).get()));
         } else if (roles.contains(ERole.OWNER)) {
             if (placeRepository.findById(currentPlaceId).get().getOwner().getId().equals(authentication.getPrincipal())) {
+                if (newOnly) {
+                    return ResponseEntity.ok().body(orderRepository.findNewByPlaceId(placeRepository.findById(currentPlaceId).get()));
+                }
                 return ResponseEntity.ok().body(orderRepository.findAllByPlaceId(placeRepository.findById(currentPlaceId).get()));
             }
             return ResponseEntity.badRequest().body("invalid place id");
         } else if (roles.contains(ERole.HOOKAH_MASTER) || roles.contains(ERole.WAITER)) {
             var place = userRepository.findById((Long) authentication.getPrincipal()).get().getWorkPlaces().stream().filter((val) -> val.getId().equals(currentPlaceId)).findFirst().orElseThrow();
+            if (newOnly) {
+                return ResponseEntity.ok().body(orderRepository.findNewByPlaceId(place));
+            }
             return ResponseEntity.ok().body(orderRepository.findAllByPlaceId(place));
         } else {
+            if (newOnly) {
+                return ResponseEntity.ok().body(orderRepository.findNewByPlaceIdAndUserId(placeRepository.findById(currentPlaceId).get(), userRepository.findById((Long) authentication.getPrincipal()).get()));
+            }
             return ResponseEntity.ok().body(orderRepository.findAllByPlaceIdAndUserId(placeRepository.findById(currentPlaceId).get(), userRepository.findById((Long) authentication.getPrincipal()).get()));
         }
     }
@@ -69,5 +85,43 @@ public class OrderController {
             }
             return ResponseEntity.badRequest().body("Access denied");
         }).orElse(ResponseEntity.badRequest().build());
+    }
+
+    @PostMapping("/complete/{id}")
+    @ApiOperation("Закрытие заказа по id")
+    ResponseEntity<?> completeOrder(@PathVariable Long id, Authentication authentication) {
+        return orderRepository.findById(id).map((val) -> {
+            if (val.getUserId().getId().equals(authentication.getPrincipal())
+                    || authentication.getAuthorities().contains(ERole.ADMIN)
+                    || isOrderCompletedByOrderExecutor(val, authentication)) {
+                val.setCompletedAt(LocalDate.now());
+                return ResponseEntity.ok().body(orderRepository.save(val));
+            }
+            return ResponseEntity.badRequest().body("Access denied");
+        }).orElse(ResponseEntity.badRequest().build());
+    }
+
+    @PostMapping("/cancel/{id}")
+    @ApiOperation("Отмена заказа по id")
+    ResponseEntity<?> cancelOrder(@PathVariable Long id, Authentication authentication) {
+        return orderRepository.findById(id).map((val) -> {
+            if (val.getUserId().getId().equals(authentication.getPrincipal())
+                    || authentication.getAuthorities().contains(ERole.ADMIN)) {
+                val.setCancelledAt(LocalDate.now());
+                return ResponseEntity.ok().body(orderRepository.save(val));
+            }
+            return ResponseEntity.badRequest().body("Access denied");
+        }).orElse(ResponseEntity.badRequest().build());
+    }
+
+    private boolean isOrderCompletedByOrderExecutor(OrderEntity order, Authentication authentication) {
+        var roles = authentication.getAuthorities();
+        if (roles.contains(ERole.HOOKAH_MASTER) || roles.contains(ERole.WAITER)) {
+            return userRepository.findById((Long) authentication.getPrincipal()).get()
+                    .getWorkPlaces().stream()
+                    .filter((place) -> place.equals(order.getPlaceId()))
+                    .count() > 0;
+        }
+        return false;
     }
 }
