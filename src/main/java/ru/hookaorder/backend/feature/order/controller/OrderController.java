@@ -85,7 +85,8 @@ public class OrderController {
                 staffTokens.add(place.getOwner().getFcmToken());
             }
             String textMsg = FCMUtils.getOrderMsgText(orderEntity);
-
+            staffTokens
+                    .forEach(System.out::println);
             MulticastMessage msg = MulticastMessage.builder()
                     .addAllTokens(staffTokens)
                     .putData("Заказ", textMsg)
