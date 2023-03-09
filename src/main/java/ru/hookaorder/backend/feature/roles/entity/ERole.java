@@ -7,10 +7,10 @@ import org.springframework.security.core.GrantedAuthority;
 public enum ERole implements GrantedAuthority {
     ADMIN("ADMIN"), OWNER("OWNER"), USER("USER"), HOOKAH_MASTER("HOOKAH_MASTER"), WAITER("WAITER");
 
-    private final String vale;
+    private final String value;
 
     @Override
     public String getAuthority() {
-        return vale;
+        return value;
     }
 }

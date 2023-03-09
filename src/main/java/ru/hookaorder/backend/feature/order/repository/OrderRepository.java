@@ -15,13 +15,13 @@ public interface OrderRepository extends CrudRepository<OrderEntity, Long> {
 
     @Query(value = "SELECT * FROM orders ord " +
             "WHERE ord.place_id = ?1 " +
-            "AND ord.completed_at IS NULL AND ord.cancelled_at IS NULL",
+            "AND ord.taken_at IS NULL AND ord.completed_at IS NULL AND ord.cancelled_at IS NULL",
             nativeQuery = true)
     List<OrderEntity> findNewByPlaceId(PlaceEntity placeEntity);
 
     @Query(value = "SELECT * FROM orders ord " +
             "WHERE ord.place_id = ?1 AND ord.user_id = ?2 " +
-            "AND ord.completed_at IS NULL AND ord.cancelled_at IS NULL",
+            "AND ord.taken_at IS NULL AND ord.completed_at IS NULL AND ord.cancelled_at IS NULL",
             nativeQuery = true)
     List<OrderEntity> findNewByPlaceIdAndUserId(PlaceEntity placeEntity, UserEntity userEntity);
 }

@@ -38,9 +38,15 @@ public class OrderEntity extends BaseEntity {
     @JoinColumn(name = "comment_id", referencedColumnName = "id")
     private CommentEntity comment;
 
+    @Column(name = "taken_at")
+    private LocalDate takenAt;
+
     @Column(name = "completed_at")
     private LocalDate completedAt;
 
     @Column(name = "cancelled_at")
     private LocalDate cancelledAt;
+
+    @Column(name = "order_status")
+    private EOrderStatus orderStatus;
 }

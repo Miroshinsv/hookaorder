@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import ru.hookaorder.backend.feature.order.entity.EOrderStatus;
 import ru.hookaorder.backend.feature.order.entity.OrderEntity;
 import ru.hookaorder.backend.feature.order.repository.OrderRepository;
 import ru.hookaorder.backend.feature.place.repository.PlaceRepository;
@@ -72,6 +73,7 @@ public class OrderController {
     @PostMapping("/create")
     @ApiOperation("Создание заказа")
     ResponseEntity<OrderEntity> createOrder(@RequestBody OrderEntity orderEntity) {
+        orderEntity.setOrderStatus(EOrderStatus.NEW);
         return ResponseEntity.ok(orderRepository.save(orderEntity));
     }
 
@@ -87,14 +89,38 @@ public class OrderController {
         }).orElse(ResponseEntity.badRequest().build());
     }
 
-    @PostMapping("/complete/{id}")
-    @ApiOperation("Закрытие заказа по id")
-    ResponseEntity<?> completeOrder(@PathVariable Long id, Authentication authentication) {
+    @PostMapping("/taken/{id}")
+    @ApiOperation("Взятие заказа в работу по id")
+    ResponseEntity<?> takeOrder(@PathVariable Long id, Authentication authentication) {
+        if (orderRepository.findById(id).get().getOrderStatus() != EOrderStatus.NEW) {
+            return ResponseEntity.badRequest()
+                    .body("Just orders with NEW status could be taken in progress");
+        }
         return orderRepository.findById(id).map((val) -> {
             if (val.getUserId().getId().equals(authentication.getPrincipal())
                     || authentication.getAuthorities().contains(ERole.ADMIN)
-                    || isOrderCompletedByOrderExecutor(val, authentication)) {
+                    || isOrderProcessedByExecutor(val, authentication)) {
+                val.setTakenAt(LocalDate.now());
+                val.setOrderStatus(EOrderStatus.TAKEN);
+                return ResponseEntity.ok().body(orderRepository.save(val));
+            }
+            return ResponseEntity.badRequest().body("Access denied");
+        }).orElse(ResponseEntity.badRequest().build());
+    }
+
+    @PostMapping("/complete/{id}")
+    @ApiOperation("Закрытие заказа по id")
+    ResponseEntity<?> completeOrder(@PathVariable Long id, Authentication authentication) {
+        if (orderRepository.findById(id).get().getOrderStatus() != EOrderStatus.TAKEN) {
+            return ResponseEntity.badRequest()
+                    .body("Just orders with TAKEN status could be completed");
+        }
+        return orderRepository.findById(id).map((val) -> {
+            if (val.getUserId().getId().equals(authentication.getPrincipal())
+                    || authentication.getAuthorities().contains(ERole.ADMIN)
+                    || isOrderProcessedByExecutor(val, authentication)) {
                 val.setCompletedAt(LocalDate.now());
+                val.setOrderStatus(EOrderStatus.COMPLETED);
                 return ResponseEntity.ok().body(orderRepository.save(val));
             }
             return ResponseEntity.badRequest().body("Access denied");
@@ -104,17 +130,22 @@ public class OrderController {
     @PostMapping("/cancel/{id}")
     @ApiOperation("Отмена заказа по id")
     ResponseEntity<?> cancelOrder(@PathVariable Long id, Authentication authentication) {
+        if (orderRepository.findById(id).get().getOrderStatus() == EOrderStatus.COMPLETED) {
+            return ResponseEntity.badRequest()
+                    .body("COMPLETED orders couldn't be cancelled");
+        }
         return orderRepository.findById(id).map((val) -> {
             if (val.getUserId().getId().equals(authentication.getPrincipal())
                     || authentication.getAuthorities().contains(ERole.ADMIN)) {
                 val.setCancelledAt(LocalDate.now());
+                val.setOrderStatus(EOrderStatus.CANCELLED);
                 return ResponseEntity.ok().body(orderRepository.save(val));
             }
             return ResponseEntity.badRequest().body("Access denied");
         }).orElse(ResponseEntity.badRequest().build());
     }
 
-    private boolean isOrderCompletedByOrderExecutor(OrderEntity order, Authentication authentication) {
+    private boolean isOrderProcessedByExecutor(OrderEntity order, Authentication authentication) {
         var roles = authentication.getAuthorities();
         if (roles.contains(ERole.HOOKAH_MASTER) || roles.contains(ERole.WAITER)) {
             return userRepository.findById((Long) authentication.getPrincipal()).get()
