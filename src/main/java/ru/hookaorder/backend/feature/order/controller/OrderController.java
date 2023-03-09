@@ -79,10 +79,10 @@ public class OrderController {
 
     @PostMapping("/update/{id}")
     @ApiOperation("Обновление заказа по id")
-    ResponseEntity<?> updateOrder(@PathVariable Long id, Authentication authentication) {
+    ResponseEntity<?> updateOrder(@PathVariable Long id, @RequestBody OrderEntity orderEntity, Authentication authentication) {
         return orderRepository.findById(id).map((val) -> {
             if (val.getUserId().getId().equals(authentication.getPrincipal()) || authentication.getAuthorities().contains(ERole.ADMIN)) {
-                NullAwareBeanUtilsBean.copyNoNullProperties(orderRepository.findById(id), val);
+                NullAwareBeanUtilsBean.copyNoNullProperties(orderEntity, val);
                 return ResponseEntity.ok().body(orderRepository.save(val));
             }
             return ResponseEntity.badRequest().body("Access denied");
