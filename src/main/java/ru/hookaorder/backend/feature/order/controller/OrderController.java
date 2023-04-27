@@ -73,7 +73,9 @@ public class OrderController {
         Optional<PlaceEntity> currentPlace = placeRepository.findById(orderEntity.getPlaceId().getId());
         if (currentPlace.isPresent()) {
             final FirebaseMessaging firebaseMessaging = FirebaseMessaging.getInstance();
-            firebaseMessaging.sendAll(currentPlace.get().getStaff().stream().map(token -> FCMUtils.getOrderMsgText(orderEntity, token.getFcmToken())).collect(Collectors.toList()));
+            if(!currentPlace.get().getStaff().isEmpty()){
+                firebaseMessaging.sendAll(currentPlace.get().getStaff().stream().map(token -> FCMUtils.getOrderMsgText(orderEntity, token.getFcmToken())).collect(Collectors.toList()));
+            }
 
             // TODO: Fix this
             if (currentPlace.get().getOwner() != null && currentPlace.get().getOwner().getFcmToken() != null) {
