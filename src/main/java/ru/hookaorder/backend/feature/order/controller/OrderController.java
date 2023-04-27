@@ -16,6 +16,7 @@ import ru.hookaorder.backend.feature.order.repository.OrderRepository;
 import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
 import ru.hookaorder.backend.feature.place.repository.PlaceRepository;
 import ru.hookaorder.backend.feature.roles.entity.ERole;
+import ru.hookaorder.backend.feature.user.entity.UserEntity;
 import ru.hookaorder.backend.feature.user.repository.UserRepository;
 import ru.hookaorder.backend.utils.FCMUtils;
 import ru.hookaorder.backend.utils.NullAwareBeanUtilsBean;
@@ -69,7 +70,8 @@ public class OrderController {
     @PostMapping("/create")
     @ApiOperation("Создание заказа")
     ResponseEntity<OrderEntity> createOrder(@RequestBody OrderEntity orderEntity) throws FirebaseMessagingException {
-        PlaceEntity placeId = orderEntity.getPlaceId();
+        OrderEntity order = orderRepository.save(orderEntity);
+        PlaceEntity placeId = order.getPlaceId();
         if (placeId != null) {
             PlaceEntity place = placeRepository.findById(placeId.getId()).get();
 
@@ -84,19 +86,20 @@ public class OrderController {
             if (place.getOwner() != null && place.getOwner().getFcmToken() != null) {
                 staffTokens.add(place.getOwner().getFcmToken());
             }
-            String textMsg = FCMUtils.getOrderMsgText(orderEntity);
-            staffTokens
-                    .forEach(System.out::println);
-            MulticastMessage msg = MulticastMessage.builder()
+            UserEntity user = userRepository.findById(order.getUserId().getId()).get();
+            String textMsg = FCMUtils.getOrderMsgText(order, user.getPhone());
+            if(!staffTokens.isEmpty()){
+                MulticastMessage msg = MulticastMessage.builder()
                     .addAllTokens(staffTokens)
                     .putData("Заказ", textMsg)
                     .build();
-            BatchResponse response = firebaseMessaging.sendMulticast(msg);
-            System.out.println(response.getSuccessCount() + " messages were sent successfully");
-            System.out.println(response.getFailureCount() + " messages were sent fail");
-            System.out.println(response.getResponses() + " responses");
+                BatchResponse response = firebaseMessaging.sendMulticast(msg);
+                System.out.println(response.getSuccessCount() + " messages were sent successfully");
+                System.out.println(response.getFailureCount() + " messages were sent fail");
+                System.out.println(response.getResponses() + " responses");
+            }
         }
-        return ResponseEntity.ok(orderRepository.save(orderEntity));
+        return ResponseEntity.ok(orderEntity);
     }
 
     @PostMapping("/update/{id}")
