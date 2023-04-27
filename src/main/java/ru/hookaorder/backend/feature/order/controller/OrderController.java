@@ -22,6 +22,7 @@ import ru.hookaorder.backend.utils.NullAwareBeanUtilsBean;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -69,34 +70,18 @@ public class OrderController {
     @PostMapping("/create")
     @ApiOperation("Создание заказа")
     ResponseEntity<OrderEntity> createOrder(@RequestBody OrderEntity orderEntity) throws FirebaseMessagingException {
-        PlaceEntity placeId = orderEntity.getPlaceId();
-        if (placeId != null) {
-            PlaceEntity place = placeRepository.findById(placeId.getId()).get();
-
-            List<String> staffTokens = place.getStaff()
-                    .stream()
-                    .map(staff -> staff.getFcmToken())
-                    .filter(Objects::nonNull)
-                    .filter(Predicate.not(String::isEmpty))
-                    .collect(Collectors.toList());
+        Optional<PlaceEntity> currentPlace = placeRepository.findById(orderEntity.getPlaceId().getId());
+        if (currentPlace.isPresent()) {
+            final FirebaseMessaging firebaseMessaging = FirebaseMessaging.getInstance();
+            firebaseMessaging.sendAll(currentPlace.get().getStaff().stream().map(token -> FCMUtils.getOrderMsgText(orderEntity, token.getFcmToken())).collect(Collectors.toList()));
 
             // TODO: Fix this
-            if (place.getOwner() != null && place.getOwner().getFcmToken() != null) {
-                staffTokens.add(place.getOwner().getFcmToken());
+            if (currentPlace.get().getOwner() != null && currentPlace.get().getOwner().getFcmToken() != null) {
+                firebaseMessaging.send(FCMUtils.getOrderMsgText(orderEntity, currentPlace.get().getOwner().getFcmToken()));
             }
-            String textMsg = FCMUtils.getOrderMsgText(orderEntity);
-            staffTokens
-                    .forEach(System.out::println);
-            MulticastMessage msg = MulticastMessage.builder()
-                    .addAllTokens(staffTokens)
-                    .putData("Заказ", textMsg)
-                    .build();
-            BatchResponse response = firebaseMessaging.sendMulticast(msg);
-            System.out.println(response.getSuccessCount() + " messages were sent successfully");
-            System.out.println(response.getFailureCount() + " messages were sent fail");
-            System.out.println(response.getResponses() + " responses");
+            return ResponseEntity.ok(orderRepository.save(orderEntity));
         }
-        return ResponseEntity.ok(orderRepository.save(orderEntity));
+        return ResponseEntity.notFound().build();
     }
 
     @PostMapping("/update/{id}")

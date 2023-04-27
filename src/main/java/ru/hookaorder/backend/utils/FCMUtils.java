@@ -1,5 +1,6 @@
 package ru.hookaorder.backend.utils;
 
+import com.google.firebase.messaging.Message;
 import ru.hookaorder.backend.feature.order.entity.OrderEntity;
 
 public final class FCMUtils {
@@ -7,15 +8,13 @@ public final class FCMUtils {
     private FCMUtils() {
     }
 
-    public static String getOrderMsgText(OrderEntity orderEntity) {
-        return new StringBuilder("От: ")
-                .append(orderEntity.getUserId() != null
+    public static Message getOrderMsgText(OrderEntity orderEntity, String fmcToken) {
+        return Message.builder()
+                .setToken(fmcToken)
+                .putData("От", orderEntity.getUserId() != null
                         ? orderEntity.getUserId().getPhone()
-                        : "")
-                .append(". На ")
-                .append(orderEntity.getOrderTime())
-                .append(". ")
-                .append(orderEntity.getComment())
-                .toString();
+                        : "Телефон не указан")
+                .putData("На", orderEntity.getOrderTime())
+                .build();
     }
 }
