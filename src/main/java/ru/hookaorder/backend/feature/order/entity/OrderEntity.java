@@ -10,7 +10,7 @@ import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
 import ru.hookaorder.backend.feature.user.entity.UserEntity;
 
 import javax.persistence.*;
-import javax.validation.constraints.Size;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "orders")
@@ -37,4 +37,16 @@ public class OrderEntity extends BaseEntity {
     @JsonProperty(value = "comment", access = JsonProperty.Access.READ_ONLY)
     @JoinColumn(name = "comment_id", referencedColumnName = "id")
     private CommentEntity comment;
+
+    @Column(name = "taken_at")
+    private LocalDate takenAt;
+
+    @Column(name = "completed_at")
+    private LocalDate completedAt;
+
+    @Column(name = "cancelled_at")
+    private LocalDate cancelledAt;
+
+    @Column(name = "order_status")
+    private EOrderStatus orderStatus;
 }
