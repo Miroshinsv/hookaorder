@@ -1,10 +1,8 @@
 package ru.hookaorder.backend.feature.order.controller;
 
 
-import com.google.firebase.messaging.BatchResponse;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
-import com.google.firebase.messaging.MulticastMessage;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -16,14 +14,12 @@ import ru.hookaorder.backend.feature.order.repository.OrderRepository;
 import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
 import ru.hookaorder.backend.feature.place.repository.PlaceRepository;
 import ru.hookaorder.backend.feature.roles.entity.ERole;
+import ru.hookaorder.backend.feature.user.entity.UserEntity;
 import ru.hookaorder.backend.feature.user.repository.UserRepository;
 import ru.hookaorder.backend.utils.FCMUtils;
 import ru.hookaorder.backend.utils.NullAwareBeanUtilsBean;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @RestController
@@ -34,7 +30,6 @@ public class OrderController {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final PlaceRepository placeRepository;
-
     private final FirebaseMessaging firebaseMessaging;
 
     @GetMapping("/get/{id}")
@@ -70,20 +65,26 @@ public class OrderController {
     @PostMapping("/create")
     @ApiOperation("Создание заказа")
     ResponseEntity<OrderEntity> createOrder(@RequestBody OrderEntity orderEntity) throws FirebaseMessagingException {
-        Optional<PlaceEntity> currentPlace = placeRepository.findById(orderEntity.getPlaceId().getId());
-        if (currentPlace.isPresent()) {
-            final FirebaseMessaging firebaseMessaging = FirebaseMessaging.getInstance();
-            if(!currentPlace.get().getStaff().isEmpty()){
-                firebaseMessaging.sendAll(currentPlace.get().getStaff().stream().map(token -> FCMUtils.getOrderMsgText(orderEntity, token.getFcmToken())).collect(Collectors.toList()));
-            }
 
-            // TODO: Fix this
-            if (currentPlace.get().getOwner() != null && currentPlace.get().getOwner().getFcmToken() != null) {
-                firebaseMessaging.send(FCMUtils.getOrderMsgText(orderEntity, currentPlace.get().getOwner().getFcmToken()));
-            }
-            return ResponseEntity.ok(orderRepository.save(orderEntity));
+        PlaceEntity place = placeRepository.findById(orderEntity.getPlaceId().getId()).orElseThrow();
+        String phoneUserOrdered = userRepository.findById(orderEntity.getUserId().getId()).orElseThrow().getPhone();
+
+        orderRepository.save(orderEntity);
+
+        List<UserEntity> userList = place.getStaff().stream()
+            .filter(val -> val.getFcmToken() != null)
+            .collect(Collectors.toList());
+        if (place.getOwner() != null && place.getOwner().getFcmToken() != null) {
+            userList.add(place.getOwner());
         }
-        return ResponseEntity.notFound().build();
+
+        firebaseMessaging.sendAll(
+            userList.stream()
+                .map(user -> FCMUtils.getOrderMsgText(orderEntity, phoneUserOrdered, user.getFcmToken()))
+                .collect(Collectors.toList())
+        );
+
+        return ResponseEntity.ok(orderEntity);
     }
 
     @PostMapping("/update/{id}")
