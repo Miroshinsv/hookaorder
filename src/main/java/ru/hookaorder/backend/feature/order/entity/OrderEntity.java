@@ -34,7 +34,7 @@ public class OrderEntity extends BaseEntity {
     private String orderTime;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JsonProperty(value = "comment", access = JsonProperty.Access.READ_ONLY)
+    @JsonProperty(value = "comment")
     @JoinColumn(name = "comment_id", referencedColumnName = "id")
     private CommentEntity comment;
 
