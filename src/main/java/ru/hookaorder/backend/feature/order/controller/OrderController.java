@@ -77,9 +77,11 @@ public class OrderController {
 
     @PostMapping("/create")
     @ApiOperation("Создание заказа")
-    ResponseEntity<OrderEntity> createOrder(@RequestBody OrderEntity orderEntity) {
+    ResponseEntity<OrderEntity> createOrder(@RequestBody OrderEntity orderEntity, Authentication authentication) {
         PlaceEntity place = placeRepository.findById(orderEntity.getPlaceId().getId()).orElseThrow();
+        UserEntity userOrdered = userRepository.findById((Long) authentication.getPrincipal()).orElseThrow();
 
+        orderEntity.setUserId(userOrdered);
         orderEntity.setOrderStatus(EOrderStatus.NEW);
         orderRepository.save(orderEntity);
 
@@ -114,7 +116,7 @@ public class OrderController {
             if (val.getUserId().getId().equals(authentication.getPrincipal()) || authentication.getAuthorities().contains(ERole.ADMIN) || isOrderProcessedByExecutor(val, authentication)) {
                 val.setTakenAt(LocalDate.now());
                 val.setOrderStatus(EOrderStatus.TAKEN);
-                pushNotificationService.sendNotificationChangeOderStatusUser(val.getUserId(), val, EOrderStatus.TAKEN);
+                pushNotificationService.sendNotificationChangeOrderStatusUser(val.getUserId(), val, EOrderStatus.TAKEN);
                 return ResponseEntity.ok().body(orderRepository.save(val));
             }
             return ResponseEntity.badRequest().body("Access denied");
@@ -147,7 +149,7 @@ public class OrderController {
             if (val.getUserId().getId().equals(authentication.getPrincipal()) || authentication.getAuthorities().contains(ERole.ADMIN)) {
                 val.setCancelledAt(LocalDate.now());
                 val.setOrderStatus(EOrderStatus.CANCELLED);
-                pushNotificationService.sendNotificationChangeOderStatusUser(val.getUserId(), val, EOrderStatus.CANCELLED);
+                pushNotificationService.sendNotificationChangeOrderStatusUser(val.getUserId(), val, EOrderStatus.CANCELLED);
                 return ResponseEntity.ok().body(orderRepository.save(val));
             }
             return ResponseEntity.badRequest().body("Access denied");

@@ -8,7 +8,7 @@ import ru.hookaorder.backend.feature.user.entity.UserEntity;
 import java.util.Set;
 
 public interface IPushNotificationService {
-    String sendNotificationChangeOderStatusUser(UserEntity User, OrderEntity order, EOrderStatus status);
+    String sendNotificationChangeOrderStatusUser(UserEntity User, OrderEntity order, EOrderStatus status);
 
     BatchResponse sendNotificationNewOrderToStuff(OrderEntity order, Set<String> FMCTokens);
 
