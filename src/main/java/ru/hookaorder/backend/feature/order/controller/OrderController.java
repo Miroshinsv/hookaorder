@@ -19,8 +19,8 @@ import ru.hookaorder.backend.services.pushnotification.IPushNotificationService;
 import ru.hookaorder.backend.utils.NullAwareBeanUtilsBean;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -83,7 +83,7 @@ public class OrderController {
         orderEntity.setOrderStatus(EOrderStatus.NEW);
         orderRepository.save(orderEntity);
 
-        List<String> userFMCTokenList = place.getStaff().stream().map(UserEntity::getFcmToken).filter(Objects::nonNull).collect(Collectors.toList());
+        Set<String> userFMCTokenList = place.getStaff().stream().map(UserEntity::getFcmToken).filter(Objects::nonNull).collect(Collectors.toSet());
 
         if (place.getOwner() != null && place.getOwner().getFcmToken() != null) {
             userFMCTokenList.add(place.getOwner().getFcmToken());

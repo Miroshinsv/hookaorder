@@ -5,11 +5,11 @@ import ru.hookaorder.backend.feature.order.entity.EOrderStatus;
 import ru.hookaorder.backend.feature.order.entity.OrderEntity;
 import ru.hookaorder.backend.feature.user.entity.UserEntity;
 
-import java.util.List;
+import java.util.Set;
 
 public interface IPushNotificationService {
     String sendNotificationChangeOderStatusUser(UserEntity User, OrderEntity order, EOrderStatus status);
 
-    BatchResponse sendNotificationNewOrderToStuff(OrderEntity order, List<String> FMCTokens);
+    BatchResponse sendNotificationNewOrderToStuff(OrderEntity order, Set<String> FMCTokens);
 
 }

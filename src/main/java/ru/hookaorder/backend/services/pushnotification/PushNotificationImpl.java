@@ -15,8 +15,8 @@ import ru.hookaorder.backend.feature.order.entity.EOrderStatus;
 import ru.hookaorder.backend.feature.order.entity.OrderEntity;
 import ru.hookaorder.backend.feature.user.entity.UserEntity;
 
-import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,7 +38,7 @@ public class PushNotificationImpl implements IPushNotificationService {
     @Override
     @SneakyThrows
     public String sendNotificationChangeOderStatusUser(UserEntity user, OrderEntity order, EOrderStatus status) {
-        if (user.getFcmToken().isEmpty() || user.getFcmToken() == null) {
+        if (user.getFcmToken().isEmpty()) {
             return null;
         }
         switch (status) {
@@ -57,7 +57,7 @@ public class PushNotificationImpl implements IPushNotificationService {
 
     @SneakyThrows
     @Override
-    public BatchResponse sendNotificationNewOrderToStuff(OrderEntity order, List<String> FMCTokens) {
+    public BatchResponse sendNotificationNewOrderToStuff(OrderEntity order, Set<String> FMCTokens) {
         return firebaseMessaging.sendAll(FMCTokens.stream().map(val -> Message.builder().setToken(val).setNotification(Notification.builder().setTitle("Новый заказ " + order.getId()).setBody(String.format("Номер телефона:\n %s\nВремя:\n%s\nКомментарий:\n%s", order.getUserId().getPhone(), order.getOrderTime(), order.getComment().getText())).build()).build()).collect(Collectors.toList()));
     }
 
