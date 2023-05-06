@@ -44,14 +44,17 @@ public class PushNotificationImpl implements IPushNotificationService {
     }
     switch (status) {
       case TAKEN -> {
-        return firebaseMessaging.send(Message.builder().setNotification(Notification.builder()
+        return firebaseMessaging.send(Message.builder()
+            .setToken(user.getFcmToken())
+            .setNotification(Notification.builder()
             .setTitle("Ваш заказ принят!").setBody(String.format("Ждем вас в %s по адресу %s ", order.getOrderTime(),
                 order.getPlaceId().getAddress())).build()).build());
 
       }
       case CANCELLED -> {
         return firebaseMessaging.send(Message.builder()
-            .setNotification(Notification.builder().setTitle("Ваш заказ отменет")
+                .setToken(user.getFcmToken())
+            .setNotification(Notification.builder().setTitle("Ваш заказ отменен")
                 .setBody(String.format("Ваш заказ на %s по адресу %s был отменен", order.getOrderTime(), order.getPlaceId().getAddress()))
                 .build()).build());
       }
