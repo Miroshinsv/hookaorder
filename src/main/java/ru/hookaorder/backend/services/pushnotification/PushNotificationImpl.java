@@ -38,6 +38,9 @@ public class PushNotificationImpl implements IPushNotificationService {
     @Override
     @SneakyThrows
     public String sendNotificationChangeOderStatusUser(UserEntity user, OrderEntity order, EOrderStatus status) {
+        if (user.getFcmToken().isEmpty() || user.getFcmToken() == null) {
+            return null;
+        }
         switch (status) {
             case TAKEN -> {
                 return firebaseMessaging.send(Message.builder().setNotification(Notification.builder().setTitle("Ваш заказ принят!").setBody(String.format("Ждем вас в %s по адресу %s ", order.getOrderTime(), order.getPlaceId().getAddress())).build()).build());
@@ -55,7 +58,7 @@ public class PushNotificationImpl implements IPushNotificationService {
     @SneakyThrows
     @Override
     public BatchResponse sendNotificationNewOrderToStuff(OrderEntity order, List<String> FMCTokens) {
-        return firebaseMessaging.sendAll(FMCTokens.stream().map(val -> Message.builder().setNotification(Notification.builder().setTitle("Новый заказ " + order.getId()).setBody(String.format("Номер телефона:\n %s\nВремя:\n%s\nКомментарий:\n%s", order.getUserId().getPhone(), order.getOrderTime(), order.getComment().getText())).build()).build()).collect(Collectors.toList()));
+        return firebaseMessaging.sendAll(FMCTokens.stream().map(val -> Message.builder().setToken(val).setNotification(Notification.builder().setTitle("Новый заказ " + order.getId()).setBody(String.format("Номер телефона:\n %s\nВремя:\n%s\nКомментарий:\n%s", order.getUserId().getPhone(), order.getOrderTime(), order.getComment().getText())).build()).build()).collect(Collectors.toList()));
     }
 
 
