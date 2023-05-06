@@ -35,7 +35,6 @@ public class UserEntity extends BaseEntity {
 
     @Column(name = "phone", nullable = false, unique = true)
     @Pattern(regexp = "^[+]?[(]?[0-9]{3}[)]?[-\\s.]?[0-9]{3}[-\\s.]?[0-9]{4,6}$")
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String phone;
 
     @NotBlank
