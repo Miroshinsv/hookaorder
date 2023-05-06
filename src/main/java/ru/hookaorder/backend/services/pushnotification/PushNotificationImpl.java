@@ -28,47 +28,58 @@ public class PushNotificationImpl implements IPushNotificationService {
         this.firebaseMessaging = FirebaseMessaging.getInstance(getFirebaseApp(credentials));
     }
 
-  @SneakyThrows
-  private static FirebaseApp getFirebaseApp(String fmcCredentials) {
-    ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-    FirebaseOptions options = FirebaseOptions.builder().setCredentials(GoogleCredentials
-        .fromStream(Objects.requireNonNull(classloader.getResourceAsStream(fmcCredentials)))).build();
-    return FirebaseApp.initializeApp(options);
-  }
-
-  @Override
-  @SneakyThrows
-  public String sendNotificationChangeOrderStatusUser(UserEntity user, OrderEntity order, EOrderStatus status) {
-    if (user.getFcmToken().isEmpty()) {
-      return null;
+    @SneakyThrows
+    private static FirebaseApp getFirebaseApp(String fmcCredentials) {
+        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+        FirebaseOptions options = FirebaseOptions.builder().setCredentials(GoogleCredentials.fromStream(Objects.requireNonNull(classloader.getResourceAsStream(fmcCredentials)))).build();
+        return FirebaseApp.initializeApp(options);
     }
-    switch (status) {
-      case TAKEN -> {
-        return firebaseMessaging.send(Message.builder().setNotification(Notification.builder()
-            .setTitle("Ваш заказ принят!").setBody(String.format("Ждем вас в %s по адресу %s ", order.getOrderTime(),
-                order.getPlaceId().getAddress())).build()).build());
 
-      }
-      case CANCELLED -> {
-        return firebaseMessaging.send(Message.builder()
-            .setNotification(Notification.builder().setTitle("Ваш заказ отменет")
-                .setBody(String.format("Ваш заказ на %s по адресу %s был отменен", order.getOrderTime(), order.getPlaceId().getAddress()))
-                .build()).build());
-      }
-      default -> {
-        return null;
-      }
+    private Notification buildUserNotification(String title, String body){
+        return Notification
+                .builder()
+                .setTitle(title)
+                .setBody(body)
+                .build();
     }
-  }
 
-  @SneakyThrows
-  @Override
-  public BatchResponse sendNotificationNewOrderToStuff(OrderEntity order, Set<String> FMCTokens) {
-    return firebaseMessaging.sendAll(FMCTokens.stream().map(val -> Message.builder().setToken(val)
-        .setNotification(Notification.builder().setTitle("Новый заказ " + order.getId())
-            .setBody(String.format("Номер телефона:\n %s\nВремя:\n%s\nКомментарий:\n%s", order.getUserId().getPhone(),
-                order.getOrderTime(), order.getComment().getText())).build()).build()).collect(Collectors.toList()));
-  }
+    private Message buildMessage(String FMCToken, Notification userPushNotification) {
+        return Message
+                .builder()
+                .setToken(FMCToken)
+                .setNotification(userPushNotification)
+                .build();
+    }
 
+    @Override
+    @SneakyThrows
+    public String sendNotificationChangeOrderStatusUser(UserEntity user, OrderEntity order, EOrderStatus status) {
+        if (user.getFcmToken().isEmpty()) {
+            return null;
+        }
+        switch (status) {
+            case TAKEN -> {
+                return firebaseMessaging.send(buildMessage(user.getFcmToken(), buildUserNotification("Ваш заказ принят", String.format("Ждем вас по адресу %s в %s", order.getPlaceId().getAddress(), order.getOrderTime()))));
+            }
+            case CANCELLED -> {
+                return firebaseMessaging.send(buildMessage(user.getFcmToken(), buildUserNotification("Ваш заказ отмен", String.format("К сожалению, ваш заказ  по адресу %s на %s отменен", order.getPlaceId().getAddress(), order.getOrderTime()))));
+            }
+            default -> {
+                return null;
+            }
+        }
+    }
 
+    @SneakyThrows
+    @Override
+    public BatchResponse sendNotificationNewOrderToStuff(OrderEntity order, Set<String> FMCTokens) {
+        return firebaseMessaging
+                .sendAll(
+                        FMCTokens
+                                .stream()
+                                .map(val -> buildMessage(val, buildUserNotification("Новый заказ".concat(order.getId().toString()),String.format("Номер телефона:\n %s\nВремя:\n%s\nКомментарий:\n%s", order.getUserId().getPhone(), order.getOrderTime(), order.getComment().getText()))))
+                                .collect(Collectors.toList()
+                                )
+                );
+    }
 }
