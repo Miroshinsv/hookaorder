@@ -21,12 +21,12 @@ import java.util.stream.Collectors;
 
 @Service
 public class PushNotificationImpl implements IPushNotificationService {
-    private final FirebaseMessaging firebaseMessaging;
+  private final FirebaseMessaging firebaseMessaging;
 
-    @Autowired
-    public PushNotificationImpl(@Value("${fcm.credentials.app.file.name}") String credentials) {
-        this.firebaseMessaging = FirebaseMessaging.getInstance(getFirebaseApp(credentials));
-    }
+  @Autowired
+  public PushNotificationImpl(@Value("${fcm.credentials.app.file.name}") String credentials) {
+    this.firebaseMessaging = FirebaseMessaging.getInstance(getFirebaseApp(credentials));
+  }
 
   @SneakyThrows
   private static FirebaseApp getFirebaseApp(String fmcCredentials) {
@@ -34,6 +34,22 @@ public class PushNotificationImpl implements IPushNotificationService {
     FirebaseOptions options = FirebaseOptions.builder().setCredentials(GoogleCredentials
         .fromStream(Objects.requireNonNull(classloader.getResourceAsStream(fmcCredentials)))).build();
     return FirebaseApp.initializeApp(options);
+  }
+
+  private Notification buildUserNotification(String title, String body) {
+    return Notification
+        .builder()
+        .setTitle(title)
+        .setBody(body)
+        .build();
+  }
+
+  private Message buildMessage(String FMCToken, Notification userPushNotification) {
+    return Message
+        .builder()
+        .setToken(FMCToken)
+        .setNotification(userPushNotification)
+        .build();
   }
 
   @Override
@@ -44,19 +60,10 @@ public class PushNotificationImpl implements IPushNotificationService {
     }
     switch (status) {
       case TAKEN -> {
-        return firebaseMessaging.send(Message.builder()
-            .setToken(user.getFcmToken())
-            .setNotification(Notification.builder()
-            .setTitle("Ваш заказ принят!").setBody(String.format("Ждем вас в %s по адресу %s ", order.getOrderTime(),
-                order.getPlaceId().getAddress())).build()).build());
-
+        return firebaseMessaging.send(buildMessage(user.getFcmToken(), buildUserNotification("Ваш заказ принят", String.format("Ждем вас по адресу %s в %s", order.getPlaceId().getAddress().getAddress(), order.getOrderTime()))));
       }
       case CANCELLED -> {
-        return firebaseMessaging.send(Message.builder()
-                .setToken(user.getFcmToken())
-            .setNotification(Notification.builder().setTitle("Ваш заказ отменен")
-                .setBody(String.format("Ваш заказ на %s по адресу %s был отменен", order.getOrderTime(), order.getPlaceId().getAddress()))
-                .build()).build());
+        return firebaseMessaging.send(buildMessage(user.getFcmToken(), buildUserNotification("Ваш заказ отмен", String.format("К сожалению, ваш заказ  по адресу %s на %s отменен", order.getPlaceId().getAddress().getAddress(), order.getOrderTime()))));
       }
       default -> {
         return null;
@@ -67,11 +74,16 @@ public class PushNotificationImpl implements IPushNotificationService {
   @SneakyThrows
   @Override
   public BatchResponse sendNotificationNewOrderToStuff(OrderEntity order, Set<String> FMCTokens) {
-    return firebaseMessaging.sendAll(FMCTokens.stream().map(val -> Message.builder().setToken(val)
-        .setNotification(Notification.builder().setTitle("Новый заказ " + order.getId())
-            .setBody(String.format("Номер телефона:\n %s\nВремя:\n%s\nКомментарий:\n%s", order.getUserId().getPhone(),
-                order.getOrderTime(), order.getComment().getText())).build()).build()).collect(Collectors.toList()));
+    return firebaseMessaging
+        .sendAll(
+            FMCTokens
+                .stream()
+                .map(val -> buildMessage(val,
+                    buildUserNotification("Новый заказ".concat(order.getId().toString()),
+                        String.format("Номер телефона:\n %s\nВремя:\n%s\nКомментарий:\n%s",
+                            order.getUserId().getPhone(), order.getOrderTime(), order.getComment().getText()))))
+                .collect(Collectors.toList()
+                )
+        );
   }
-
-
 }
