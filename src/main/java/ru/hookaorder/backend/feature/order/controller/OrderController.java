@@ -1,8 +1,6 @@
 package ru.hookaorder.backend.feature.order.controller;
 
 
-import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -17,12 +15,12 @@ import ru.hookaorder.backend.feature.place.repository.PlaceRepository;
 import ru.hookaorder.backend.feature.roles.entity.ERole;
 import ru.hookaorder.backend.feature.user.entity.UserEntity;
 import ru.hookaorder.backend.feature.user.repository.UserRepository;
-import ru.hookaorder.backend.utils.FCMUtils;
+import ru.hookaorder.backend.services.pushnotification.IPushNotificationService;
 import ru.hookaorder.backend.utils.NullAwareBeanUtilsBean;
 
 import java.time.LocalDate;
-
-import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -33,7 +31,7 @@ public class OrderController {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final PlaceRepository placeRepository;
-    private final FirebaseMessaging firebaseMessaging;
+    private final IPushNotificationService pushNotificationService;
 
     @GetMapping("/get/{id}")
     @ApiOperation("Получение заказа по id")
@@ -48,9 +46,7 @@ public class OrderController {
 
     @GetMapping("/get/all/{currentPlaceId}")
     @ApiOperation("Получение всех заказов")
-    ResponseEntity<?> getAllOrders(@PathVariable Long currentPlaceId,
-                                   @RequestParam(name = "new", defaultValue = "false") Boolean newOnly,
-                                   Authentication authentication) {
+    ResponseEntity<?> getAllOrders(@PathVariable Long currentPlaceId, @RequestParam(name = "new", defaultValue = "false") Boolean newOnly, Authentication authentication) {
         var roles = authentication.getAuthorities();
         if (roles.contains(ERole.ADMIN)) {
             if (newOnly) {
@@ -81,27 +77,20 @@ public class OrderController {
 
     @PostMapping("/create")
     @ApiOperation("Создание заказа")
-    ResponseEntity<OrderEntity> createOrder(@RequestBody OrderEntity orderEntity) throws FirebaseMessagingException {
-
+    ResponseEntity<OrderEntity> createOrder(@RequestBody OrderEntity orderEntity, Authentication authentication) {
         PlaceEntity place = placeRepository.findById(orderEntity.getPlaceId().getId()).orElseThrow();
-        String phoneUserOrdered = userRepository.findById(orderEntity.getUserId().getId()).orElseThrow().getPhone();
+        UserEntity userOrdered = userRepository.findById((Long) authentication.getPrincipal()).orElseThrow();
 
+        orderEntity.setUserId(userOrdered);
         orderEntity.setOrderStatus(EOrderStatus.NEW);
         orderRepository.save(orderEntity);
 
-        List<UserEntity> userList = place.getStaff().stream()
-            .filter(val -> val.getFcmToken() != null)
-            .collect(Collectors.toList());
+        Set<String> userFMCTokenList = place.getStaff().stream().map(UserEntity::getFcmToken).filter(Objects::nonNull).collect(Collectors.toSet());
+
         if (place.getOwner() != null && place.getOwner().getFcmToken() != null) {
-            userList.add(place.getOwner());
+            userFMCTokenList.add(place.getOwner().getFcmToken());
         }
-
-        firebaseMessaging.sendAll(
-            userList.stream()
-                .map(user -> FCMUtils.getOrderMsgText(orderEntity, phoneUserOrdered, user.getFcmToken()))
-                .collect(Collectors.toList())
-        );
-
+        pushNotificationService.sendNotificationNewOrderToStuff(orderEntity, userFMCTokenList);
         return ResponseEntity.ok(orderEntity);
     }
 
@@ -121,15 +110,13 @@ public class OrderController {
     @ApiOperation("Взятие заказа в работу по id")
     ResponseEntity<?> takeOrder(@PathVariable Long id, Authentication authentication) {
         if (orderRepository.findById(id).get().getOrderStatus() != EOrderStatus.NEW) {
-            return ResponseEntity.badRequest()
-                    .body("Just orders with NEW status could be taken in progress");
+            return ResponseEntity.badRequest().body("Just orders with NEW status could be taken in progress");
         }
         return orderRepository.findById(id).map((val) -> {
-            if (val.getUserId().getId().equals(authentication.getPrincipal())
-                    || authentication.getAuthorities().contains(ERole.ADMIN)
-                    || isOrderProcessedByExecutor(val, authentication)) {
+            if (val.getUserId().getId().equals(authentication.getPrincipal()) || authentication.getAuthorities().contains(ERole.ADMIN) || isOrderProcessedByExecutor(val, authentication)) {
                 val.setTakenAt(LocalDate.now());
                 val.setOrderStatus(EOrderStatus.TAKEN);
+                pushNotificationService.sendNotificationChangeOrderStatusUser(val.getUserId(), val, EOrderStatus.TAKEN);
                 return ResponseEntity.ok().body(orderRepository.save(val));
             }
             return ResponseEntity.badRequest().body("Access denied");
@@ -140,13 +127,10 @@ public class OrderController {
     @ApiOperation("Закрытие заказа по id")
     ResponseEntity<?> completeOrder(@PathVariable Long id, Authentication authentication) {
         if (orderRepository.findById(id).get().getOrderStatus() != EOrderStatus.TAKEN) {
-            return ResponseEntity.badRequest()
-                    .body("Just orders with TAKEN status could be completed");
+            return ResponseEntity.badRequest().body("Just orders with TAKEN status could be completed");
         }
         return orderRepository.findById(id).map((val) -> {
-            if (val.getUserId().getId().equals(authentication.getPrincipal())
-                    || authentication.getAuthorities().contains(ERole.ADMIN)
-                    || isOrderProcessedByExecutor(val, authentication)) {
+            if (val.getUserId().getId().equals(authentication.getPrincipal()) || authentication.getAuthorities().contains(ERole.ADMIN) || isOrderProcessedByExecutor(val, authentication)) {
                 val.setCompletedAt(LocalDate.now());
                 val.setOrderStatus(EOrderStatus.COMPLETED);
                 return ResponseEntity.ok().body(orderRepository.save(val));
@@ -159,14 +143,13 @@ public class OrderController {
     @ApiOperation("Отмена заказа по id")
     ResponseEntity<?> cancelOrder(@PathVariable Long id, Authentication authentication) {
         if (orderRepository.findById(id).get().getOrderStatus() == EOrderStatus.COMPLETED) {
-            return ResponseEntity.badRequest()
-                    .body("COMPLETED orders couldn't be cancelled");
+            return ResponseEntity.badRequest().body("COMPLETED orders couldn't be cancelled");
         }
         return orderRepository.findById(id).map((val) -> {
-            if (val.getUserId().getId().equals(authentication.getPrincipal())
-                    || authentication.getAuthorities().contains(ERole.ADMIN)) {
+            if (val.getUserId().getId().equals(authentication.getPrincipal()) || authentication.getAuthorities().contains(ERole.ADMIN)) {
                 val.setCancelledAt(LocalDate.now());
                 val.setOrderStatus(EOrderStatus.CANCELLED);
+                pushNotificationService.sendNotificationChangeOrderStatusUser(val.getUserId(), val, EOrderStatus.CANCELLED);
                 return ResponseEntity.ok().body(orderRepository.save(val));
             }
             return ResponseEntity.badRequest().body("Access denied");
@@ -176,10 +159,7 @@ public class OrderController {
     private boolean isOrderProcessedByExecutor(OrderEntity order, Authentication authentication) {
         var roles = authentication.getAuthorities();
         if (roles.contains(ERole.HOOKAH_MASTER) || roles.contains(ERole.WAITER)) {
-            return userRepository.findById((Long) authentication.getPrincipal()).get()
-                    .getWorkPlaces().stream()
-                    .filter((place) -> place.equals(order.getPlaceId()))
-                    .count() > 0;
+            return userRepository.findById((Long) authentication.getPrincipal()).get().getWorkPlaces().stream().filter((place) -> place.equals(order.getPlaceId())).count() > 0;
         }
         return false;
     }
