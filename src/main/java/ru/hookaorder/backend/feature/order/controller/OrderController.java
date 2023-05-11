@@ -4,6 +4,9 @@ package ru.hookaorder.backend.feature.order.controller;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +31,8 @@ import java.util.stream.Collectors;
 @Api(tags = "Контроллер заказов")
 @RequiredArgsConstructor
 public class OrderController {
+
+    private final static int FIRST_PAGE = 0;
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final PlaceRepository placeRepository;
@@ -42,6 +47,26 @@ public class OrderController {
             }
             return ResponseEntity.badRequest().body("Access denied");
         }).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/get/my")
+    @ApiOperation("Получение собственных заказов")
+    ResponseEntity<?> getMyOrders(@RequestParam(name = "status", defaultValue = "") String status,
+                                  @RequestParam(name = "count", defaultValue = "0") Integer count,
+                                  Authentication authentication) {
+        UserEntity user = userRepository.findById((Long) authentication.getPrincipal()).orElseThrow();
+        Pageable filterOrdersPageable = createPageRequest(count.equals(0) ? Integer.MAX_VALUE : count);
+        if (status.equals("")) {
+            return ResponseEntity.ok().body(
+                orderRepository.findAllByUserId(user, filterOrdersPageable));
+        } else {
+            return ResponseEntity.ok().body(
+                orderRepository.findAllByUserIdAndOrderStatus(user, EOrderStatus.valueOf(status), filterOrdersPageable));
+        }
+    }
+
+    private Pageable createPageRequest(Integer rawsCount) {
+        return PageRequest.of(FIRST_PAGE, rawsCount, Sort.by("created_at"));
     }
 
     @GetMapping("/get/all/{currentPlaceId}")
