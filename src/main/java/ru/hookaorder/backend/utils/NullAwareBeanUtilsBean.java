@@ -4,6 +4,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,7 +16,8 @@ public class NullAwareBeanUtilsBean {
         Set<String> emptyNames = new HashSet<>();
         for (java.beans.PropertyDescriptor pd : pds) {
             Object srcValue = src.getPropertyValue(pd.getName());
-            if (srcValue == null) emptyNames.add(pd.getName());
+            if (srcValue == null || (srcValue instanceof Collection<?> && ((Collection<?>) srcValue).isEmpty()) )
+                emptyNames.add(pd.getName());
         }
 
         String[] result = new String[emptyNames.size()];
