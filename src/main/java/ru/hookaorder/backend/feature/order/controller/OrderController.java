@@ -65,8 +65,8 @@ public class OrderController {
         }
     }
 
-    private Pageable createPageRequest(Integer rawsCount) {
-        return PageRequest.of(FIRST_PAGE, rawsCount, Sort.by("created_at"));
+    private Pageable createPageRequest(Integer rowsCount) {
+        return PageRequest.of(FIRST_PAGE, rowsCount, Sort.by("createdAt").descending());
     }
 
     @GetMapping("/get/all/{currentPlaceId}")
