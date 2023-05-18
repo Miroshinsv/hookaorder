@@ -1,8 +1,6 @@
 package ru.hookaorder.backend.feature.user.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -59,7 +57,7 @@ public class UserEntity extends BaseEntity {
     @ManyToMany
     @JoinColumn
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    @JsonProperty(value = "work_places", access = JsonProperty.Access.READ_ONLY)
+    @JsonIgnore
     private Set<PlaceEntity> workPlaces = Collections.emptySet();
 
     @OneToMany
