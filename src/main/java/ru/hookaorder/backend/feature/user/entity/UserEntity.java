@@ -20,8 +20,9 @@ import java.util.stream.DoubleStream;
 @Entity
 @Getter
 @Setter
-@EqualsAndHashCode
+@EqualsAndHashCode(exclude = "workPlaces")
 @Table(name = "users")
+@JsonFilter("phoneFilter")
 public class UserEntity extends BaseEntity {
 
     @Column(name = "name")

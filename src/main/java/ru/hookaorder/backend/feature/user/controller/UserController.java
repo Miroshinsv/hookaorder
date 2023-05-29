@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.hookaorder.backend.feature.roles.entity.ERole;
 import ru.hookaorder.backend.feature.user.entity.UserEntity;
 import ru.hookaorder.backend.feature.user.repository.UserRepository;
+import ru.hookaorder.backend.utils.JsonUtils;
 import ru.hookaorder.backend.utils.NullAwareBeanUtilsBean;
 
 import java.util.Objects;
@@ -31,8 +32,10 @@ public class UserController {
     @GetMapping(value = "/get/{id}")
     @ApiOperation("Получение пользователя по id")
     @Where(clause = "is_enabled IS TRUE")
-    ResponseEntity<?> getUserById(@PathVariable Long id) {
-        return userRepository.findById(id).map((val) -> ResponseEntity.ok().body(val)).orElse(ResponseEntity.notFound().build());
+    ResponseEntity<?> getUserById(@PathVariable Long id, Authentication authentication) {
+        return userRepository.findById(id)
+            .map((val) -> ResponseEntity.ok().body(JsonUtils.checkAndApplyPhoneFilter(val, authentication)))
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping(value = "/create")
