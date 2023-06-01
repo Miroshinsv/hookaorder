@@ -16,6 +16,7 @@ import ru.hookaorder.backend.feature.place.repository.PlaceRepository;
 import ru.hookaorder.backend.feature.roles.entity.ERole;
 import ru.hookaorder.backend.feature.user.repository.UserRepository;
 import ru.hookaorder.backend.utils.CheckOwnerAndRolesAccess;
+import ru.hookaorder.backend.utils.JsonUtils;
 import ru.hookaorder.backend.utils.NullAwareBeanUtilsBean;
 
 import java.util.List;
@@ -31,8 +32,11 @@ public class PlaceController {
 
     @GetMapping("/get/{id}")
     @ApiOperation("Получение заведения по id")
-    ResponseEntity<PlaceEntity> getPlaceById(@PathVariable Long id) {
-        return placeRepository.findById(id).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    ResponseEntity<?> getPlaceById(@PathVariable Long id, Authentication authentication) {
+        return placeRepository.findById(id)
+            .map(place -> JsonUtils.checkAndApplyPhoneFilter(place, authentication))
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/get/assigned")
@@ -53,8 +57,9 @@ public class PlaceController {
     @Where(clause = "deleted_at IS NULL")
     @GetMapping("/get/all")
     @ApiOperation("Получение списка всех заведений")
-    ResponseEntity<List<PlaceEntity>> getAllPlaces() {
-        return ResponseEntity.ok(placeRepository.findAll());
+    ResponseEntity<?> getAllPlaces(Authentication authentication) {
+        return ResponseEntity.ok(
+            JsonUtils.checkAndApplyPhoneFilterForList(placeRepository.findAll(), authentication));
     }
 
     @PostMapping("/create")

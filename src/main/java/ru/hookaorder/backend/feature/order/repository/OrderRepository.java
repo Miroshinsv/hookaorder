@@ -19,13 +19,13 @@ public interface OrderRepository extends PagingAndSortingRepository<OrderEntity,
     List<OrderEntity> findAllByUserIdAndOrderStatus(UserEntity userEntity, EOrderStatus orderStatus, Pageable pageable);
 
     @Query(value = "SELECT * FROM orders ord " +
-            "WHERE ord.place_id = ?1 " +
+            "WHERE ord.places_id = ?1 " +
             "AND ord.taken_at IS NULL AND ord.completed_at IS NULL AND ord.cancelled_at IS NULL",
             nativeQuery = true)
     List<OrderEntity> findNewByPlaceId(PlaceEntity placeEntity);
 
     @Query(value = "SELECT * FROM orders ord " +
-            "WHERE ord.place_id = ?1 AND ord.user_id = ?2 " +
+            "WHERE ord.places_id = ?1 AND ord.user_id = ?2 " +
             "AND ord.taken_at IS NULL AND ord.completed_at IS NULL AND ord.cancelled_at IS NULL",
             nativeQuery = true)
     List<OrderEntity> findNewByPlaceIdAndUserId(PlaceEntity placeEntity, UserEntity userEntity);
