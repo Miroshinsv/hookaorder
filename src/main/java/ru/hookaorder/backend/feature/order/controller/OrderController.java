@@ -43,7 +43,7 @@ public class OrderController {
     @ApiOperation("Получение заказа по id")
     ResponseEntity<?> getOrderById(@PathVariable Long id, Authentication authentication) {
         return orderRepository.findById(id).map((val) -> {
-            if (val.getUserId().getId().equals(authentication.getPrincipal())
+            if (isOrderOwnedByUser(val, authentication)
                 || authentication.getAuthorities().contains(ERole.ADMIN)
                 || val.getPlaceId().getOwner().equals(authentication.getPrincipal())) {
                 return ResponseEntity.ok().body(JsonUtils.checkAndApplyPhoneFilter(val, authentication));
@@ -135,7 +135,7 @@ public class OrderController {
     @ApiOperation("Обновление заказа по id")
     ResponseEntity<?> updateOrder(@PathVariable Long id, @RequestBody OrderEntity orderEntity, Authentication authentication) {
         return orderRepository.findById(id).map((val) -> {
-            if (val.getUserId().getId().equals(authentication.getPrincipal()) || authentication.getAuthorities().contains(ERole.ADMIN)) {
+            if (isOrderOwnedByUser(val, authentication) || authentication.getAuthorities().contains(ERole.ADMIN)) {
                 NullAwareBeanUtilsBean.copyNoNullProperties(orderEntity, val);
                 return ResponseEntity.ok().body(JsonUtils.checkAndApplyPhoneFilter(orderRepository.save(val), authentication));
             }
@@ -150,7 +150,7 @@ public class OrderController {
             return ResponseEntity.badRequest().body("Just orders with NEW status could be taken in progress");
         }
         return orderRepository.findById(id).map((val) -> {
-            if (val.getUserId().getId().equals(authentication.getPrincipal()) || authentication.getAuthorities().contains(ERole.ADMIN) || isOrderProcessedByExecutor(val, authentication)) {
+            if (isOrderOwnedByUser(val, authentication) || authentication.getAuthorities().contains(ERole.ADMIN) || isOrderProcessedByExecutor(val, authentication)) {
                 val.setTakenAt(LocalDate.now());
                 val.setOrderStatus(EOrderStatus.TAKEN);
                 pushNotificationService.sendNotificationChangeOrderStatusUser(val.getUserId(), val, EOrderStatus.TAKEN);
@@ -167,7 +167,7 @@ public class OrderController {
             return ResponseEntity.badRequest().body("Just orders with TAKEN status could be completed");
         }
         return orderRepository.findById(id).map((val) -> {
-            if (val.getUserId().getId().equals(authentication.getPrincipal()) || authentication.getAuthorities().contains(ERole.ADMIN) || isOrderProcessedByExecutor(val, authentication)) {
+            if (isOrderOwnedByUser(val, authentication) || authentication.getAuthorities().contains(ERole.ADMIN) || isOrderProcessedByExecutor(val, authentication)) {
                 val.setCompletedAt(LocalDate.now());
                 val.setOrderStatus(EOrderStatus.COMPLETED);
                 return ResponseEntity.ok().body(orderRepository.save(val));
@@ -183,7 +183,7 @@ public class OrderController {
             return ResponseEntity.badRequest().body("COMPLETED orders couldn't be cancelled");
         }
         return orderRepository.findById(id).map((val) -> {
-            if (val.getUserId().getId().equals(authentication.getPrincipal()) || authentication.getAuthorities().contains(ERole.ADMIN)) {
+            if (isOrderOwnedByUser(val, authentication) || authentication.getAuthorities().contains(ERole.ADMIN)) {
                 val.setCancelledAt(LocalDate.now());
                 val.setOrderStatus(EOrderStatus.CANCELLED);
                 pushNotificationService.sendNotificationChangeOrderStatusUser(val.getUserId(), val, EOrderStatus.CANCELLED);
@@ -199,5 +199,9 @@ public class OrderController {
             return userRepository.findById((Long) authentication.getPrincipal()).get().getWorkPlaces().stream().filter((place) -> place.equals(order.getPlaceId())).count() > 0;
         }
         return false;
+    }
+
+    private boolean isOrderOwnedByUser(OrderEntity order, Authentication authentication) {
+        return order.getUserId().getId().equals(authentication.getPrincipal());
     }
 }
