@@ -73,10 +73,10 @@ public class PushNotificationImpl implements IPushNotificationService {
 
   @SneakyThrows
   @Override
-  public BatchResponse sendNotificationNewOrderToStuff(OrderEntity order, Set<String> FMCTokens) {
+  public BatchResponse sendNotificationNewOrderToStaff(OrderEntity order, Set<String> FCMTokens) {
     return firebaseMessaging
         .sendAll(
-            FMCTokens
+            FCMTokens
                 .stream()
                 .map(val -> buildMessage(val,
                     buildUserNotification("Новый заказ".concat(order.getId().toString()),
@@ -86,4 +86,19 @@ public class PushNotificationImpl implements IPushNotificationService {
                 )
         );
   }
+
+  @SneakyThrows
+  @Override
+  public BatchResponse sendSubscribeMessage(Set<String> FCMTokens, String title, String message) {
+    return firebaseMessaging
+        .sendAll(
+            FCMTokens
+                .stream()
+                .map(val -> buildMessage(val,
+                    buildUserNotification(title, message)))
+                .collect(Collectors.toList()
+                )
+        );
+  }
+
 }

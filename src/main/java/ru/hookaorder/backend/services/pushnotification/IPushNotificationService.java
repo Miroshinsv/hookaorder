@@ -10,6 +10,8 @@ import java.util.Set;
 public interface IPushNotificationService {
     String sendNotificationChangeOrderStatusUser(UserEntity User, OrderEntity order, EOrderStatus status);
 
-    BatchResponse sendNotificationNewOrderToStuff(OrderEntity order, Set<String> FMCTokens);
+    BatchResponse sendSubscribeMessage(Set<String> FCMTokens, String title, String message);
+
+    BatchResponse sendNotificationNewOrderToStaff(OrderEntity order, Set<String> FCMTokens);
 
 }

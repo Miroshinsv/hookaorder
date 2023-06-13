@@ -46,10 +46,10 @@ public class PlaceController {
                 .findAll()
                 .stream()
                 .filter((val) -> {
-                    List<Long> stuffIDs = val.getStaff()
+                    List<Long> staffIDs = val.getStaff()
                             .stream().map(BaseEntity::getId).toList();
                     return val.getOwner().getId().equals(authentication.getPrincipal()) ||
-                            stuffIDs.contains(authentication.getPrincipal());
+                            staffIDs.contains(authentication.getPrincipal());
                 })
                 .collect(Collectors.toList()));
     }
