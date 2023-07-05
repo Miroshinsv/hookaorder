@@ -1,6 +1,7 @@
 package ru.hookaorder.backend.feature.subscribe.controller;
 
 import com.google.common.collect.Sets;
+import com.google.firebase.messaging.FirebaseMessagingException;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +30,6 @@ public class SubscribeController {
   private final UserRepository userRepository;
   private final IPushNotificationService pushNotificationService;
 
-  @PreAuthorize("hasAnyAuthority('USER')")
   @PostMapping("/add/{placeId}")
   public ResponseEntity<?> subscribeToPlace(@PathVariable Long placeId, Authentication authentication) {
     return placeRepository.findById(placeId).map((val) -> {
@@ -41,7 +41,6 @@ public class SubscribeController {
     }).orElse(ResponseEntity.notFound().build());
   }
 
-  @PreAuthorize("hasAnyAuthority('USER')")
   @DeleteMapping("/delete/{placeId}")
   public ResponseEntity<?> unsubscribeFromPlace(@PathVariable Long placeId, Authentication authentication) {
     return placeRepository.findById(placeId).map((val) -> {
@@ -86,7 +85,11 @@ public class SubscribeController {
       if (CheckOwnerAndRolesAccess.isOwnerOrAdmin(place, authentication)) {
         Set<String> subscribersFCMTokens = getTokens(place, placeNotifyMode);
         if (!subscribersFCMTokens.isEmpty()) {
-          pushNotificationService.sendSubscribeMessage(subscribersFCMTokens, messageMap.get("title"), messageMap.get("message"));
+          try {
+            pushNotificationService.sendSubscribeMessage(subscribersFCMTokens, messageMap.get("title"), messageMap.get("message"));
+          } catch (FirebaseMessagingException e) {
+            return ResponseEntity.internalServerError().body("Firebase Messaging Error Code: " + e.getErrorCode());
+          }
           return ResponseEntity.ok().build();
         }
         return ResponseEntity.notFound().build();
