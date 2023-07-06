@@ -86,4 +86,9 @@ public class PlaceEntity extends BaseEntity {
                 ratings.stream().flatMapToDouble((val) -> DoubleStream.of(val.getRatingValue())).average()
                         .orElse(0)).replace(",", "."));
     }
+
+    @ManyToMany
+    @JoinColumn(name = "subscriber_id", referencedColumnName = "id")
+    @JsonIgnore
+    private Set<UserEntity> subscribers;
 }

@@ -127,7 +127,7 @@ public class OrderController {
         if (place.getOwner() != null && place.getOwner().getFcmToken() != null) {
             userFMCTokenList.add(place.getOwner().getFcmToken());
         }
-        pushNotificationService.sendNotificationNewOrderToStuff(orderEntity, userFMCTokenList);
+        pushNotificationService.sendNotificationNewOrderToStaff(orderEntity, userFMCTokenList);
         return ResponseEntity.ok(JsonUtils.checkAndApplyPhoneFilter(orderEntity, authentication));
     }
 

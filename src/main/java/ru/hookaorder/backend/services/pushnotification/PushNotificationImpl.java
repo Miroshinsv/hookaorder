@@ -7,6 +7,7 @@ import com.google.firebase.messaging.BatchResponse;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
+import com.google.firebase.messaging.FirebaseMessagingException;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -73,10 +74,10 @@ public class PushNotificationImpl implements IPushNotificationService {
 
   @SneakyThrows
   @Override
-  public BatchResponse sendNotificationNewOrderToStuff(OrderEntity order, Set<String> FMCTokens) {
+  public BatchResponse sendNotificationNewOrderToStaff(OrderEntity order, Set<String> FCMTokens) {
     return firebaseMessaging
         .sendAll(
-            FMCTokens
+            FCMTokens
                 .stream()
                 .map(val -> buildMessage(val,
                     buildUserNotification("Новый заказ".concat(order.getId().toString()),
@@ -86,4 +87,18 @@ public class PushNotificationImpl implements IPushNotificationService {
                 )
         );
   }
+
+  @Override
+  public BatchResponse sendSubscribeMessage(Set<String> FCMTokens, String title, String message) throws FirebaseMessagingException {
+    return firebaseMessaging
+        .sendAll(
+            FCMTokens
+                .stream()
+                .map(val -> buildMessage(val,
+                    buildUserNotification(title, message)))
+                .collect(Collectors.toList()
+                )
+        );
+  }
+
 }
