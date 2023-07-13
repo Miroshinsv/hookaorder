@@ -52,7 +52,7 @@ public final class JsonUtils {
   }
 
   private static boolean isFilterNeeded(Authentication authentication) {
-    return authentication.getAuthorities().isEmpty()
-        || !(PHONE_VIEW_ALLOWED_ROLES.stream().anyMatch(authentication.getAuthorities()::contains));
+    return authentication.getAuthorities() == null
+        || PHONE_VIEW_ALLOWED_ROLES.stream().noneMatch(authentication.getAuthorities()::contains);
   }
 }
