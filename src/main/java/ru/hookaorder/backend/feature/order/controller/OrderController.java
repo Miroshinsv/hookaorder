@@ -116,6 +116,7 @@ public class OrderController {
     @ApiOperation("Создание заказа")
     ResponseEntity<?> createOrder(@RequestBody OrderEntity orderEntity, Authentication authentication) {
         PlaceEntity place = placeRepository.findById(orderEntity.getPlaceId().getId()).orElseThrow();
+        orderEntity.setPlaceId(place);
         UserEntity userOrdered = userRepository.findById((Long) authentication.getPrincipal()).orElseThrow();
 
         orderEntity.setUserId(userOrdered);
