@@ -75,12 +75,12 @@ public class OrderController {
         var user = userRepository.findById((Long) authentication.getPrincipal()).get();
 
         // Check if place is exist
-        if (place.isPresent()) {
-            return ResponseEntity.badRequest().body("invalid place id");
+        if (place.isEmpty()) {
+            return ResponseEntity.badRequest().body("unknown place id");
         }
 
         // check is owner or stuff
-        if (place.stream().anyMatch(val -> val.getOwner().equals(user)) || place.stream().anyMatch(val -> val.getStaff().contains(user))) {
+        if (!place.stream().anyMatch(val -> val.getOwner().getId().equals(user.getId())) && place.stream().map(val -> val.getStaff().stream().filter(sutffPlace -> sutffPlace.getId().equals(user.getId()))).findAny().isPresent()) {
             return ResponseEntity.badRequest().body("invalid place id");
         }
 
