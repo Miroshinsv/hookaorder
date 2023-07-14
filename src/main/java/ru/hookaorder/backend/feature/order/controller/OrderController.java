@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import ru.hookaorder.backend.feature.order.entity.EOrderStatus;
@@ -43,9 +44,7 @@ public class OrderController {
     @ApiOperation("Получение заказа по id")
     ResponseEntity<?> getOrderById(@PathVariable Long id, Authentication authentication) {
         return orderRepository.findById(id).map((val) -> {
-            if (isOrderOwnedByUser(val, authentication)
-                || authentication.getAuthorities().contains(ERole.ADMIN)
-                || val.getPlaceId().getOwner().equals(authentication.getPrincipal())) {
+            if (isOrderOwnedByUser(val, authentication) || authentication.getAuthorities().contains(ERole.ADMIN) || val.getPlaceId().getOwner().equals(authentication.getPrincipal())) {
                 return ResponseEntity.ok().body(JsonUtils.checkAndApplyPhoneFilter(val, authentication));
             }
             return ResponseEntity.badRequest().body("Access denied");
@@ -54,20 +53,13 @@ public class OrderController {
 
     @GetMapping("/get/my")
     @ApiOperation("Получение собственных заказов")
-    ResponseEntity<?> getMyOrders(@RequestParam(name = "status", defaultValue = "") String status,
-                                  @RequestParam(name = "count", defaultValue = "0") Integer count,
-                                  Authentication authentication) {
+    ResponseEntity<?> getMyOrders(@RequestParam(name = "status", defaultValue = "") String status, @RequestParam(name = "count", defaultValue = "0") Integer count, Authentication authentication) {
         UserEntity user = userRepository.findById((Long) authentication.getPrincipal()).orElseThrow();
         Pageable filterOrdersPageable = createPageRequest(count.equals(0) ? Integer.MAX_VALUE : count);
         if (status.equals("")) {
-            return ResponseEntity.ok().body(
-                JsonUtils.checkAndApplyPhoneFilterForList(
-                    orderRepository.findAllByUserId(user, filterOrdersPageable), authentication));
+            return ResponseEntity.ok().body(JsonUtils.checkAndApplyPhoneFilterForList(orderRepository.findAllByUserId(user, filterOrdersPageable), authentication));
         } else {
-            return ResponseEntity.ok().body(
-                JsonUtils.checkAndApplyPhoneFilterForList(
-                    orderRepository.findAllByUserIdAndOrderStatus(user, EOrderStatus.valueOf(status), filterOrdersPageable),
-                    authentication));
+            return ResponseEntity.ok().body(JsonUtils.checkAndApplyPhoneFilterForList(orderRepository.findAllByUserIdAndOrderStatus(user, EOrderStatus.valueOf(status), filterOrdersPageable), authentication));
         }
     }
 
@@ -76,40 +68,28 @@ public class OrderController {
     }
 
     @GetMapping("/get/all/{currentPlaceId}")
-    @ApiOperation("Получение всех заказов")
+    @ApiOperation("Получение всех заказов по ID")
+    @PreAuthorize("hasAnyAuthority('ADMIN','OWNER','HOOKAH_MASTER','WAITER')")
     ResponseEntity<?> getAllOrders(@PathVariable Long currentPlaceId, @RequestParam(name = "new", defaultValue = "false") Boolean newOnly, Authentication authentication) {
-        var roles = authentication.getAuthorities();
-        if (roles.contains(ERole.ADMIN)) {
-            if (newOnly) {
-                return ResponseEntity.ok().body(orderRepository.findNewByPlaceId(placeRepository.findById(currentPlaceId).get()));
-            }
-            return ResponseEntity.ok().body(orderRepository.findAllByPlaceId(placeRepository.findById(currentPlaceId).get()));
-        } else if (roles.contains(ERole.OWNER)) {
-            if (placeRepository.findById(currentPlaceId).get().getOwner().getId().equals(authentication.getPrincipal())) {
-                if (newOnly) {
-                    return ResponseEntity.ok().body(orderRepository.findNewByPlaceId(placeRepository.findById(currentPlaceId).get()));
-                }
-                return ResponseEntity.ok().body(orderRepository.findAllByPlaceId(placeRepository.findById(currentPlaceId).get()));
-            }
+        var place = placeRepository.findById(currentPlaceId);
+        var user = userRepository.findById((Long) authentication.getPrincipal()).get();
+
+        // Check if place is exist
+        if (place.isPresent()) {
             return ResponseEntity.badRequest().body("invalid place id");
-        } else if (roles.contains(ERole.HOOKAH_MASTER) || roles.contains(ERole.WAITER)) {
-            var place = userRepository.findById((Long) authentication.getPrincipal()).get().getWorkPlaces().stream().filter((val) -> val.getId().equals(currentPlaceId)).findFirst().orElseThrow();
-            if (newOnly) {
-                return ResponseEntity.ok().body(orderRepository.findNewByPlaceId(place));
-            }
-            return ResponseEntity.ok().body(orderRepository.findAllByPlaceId(place));
-        } else {
-            if (newOnly) {
-                return ResponseEntity.ok().body(
-                    JsonUtils.checkAndApplyPhoneFilterForList(
-                        orderRepository.findNewByPlaceIdAndUserId(placeRepository.findById(currentPlaceId).get(), userRepository.findById((Long) authentication.getPrincipal()).get()),
-                        authentication));
-            }
-            return ResponseEntity.ok().body(
-                JsonUtils.checkAndApplyPhoneFilterForList(
-                    orderRepository.findAllByPlaceIdAndUserId(placeRepository.findById(currentPlaceId).get(), userRepository.findById((Long) authentication.getPrincipal()).get()),
-                    authentication));
         }
+
+        // check is owner or stuff
+        if (place.stream().anyMatch(val -> val.getOwner().equals(user)) || place.stream().anyMatch(val -> val.getStaff().contains(user))) {
+            return ResponseEntity.badRequest().body("invalid place id");
+        }
+
+        // filter by new orders
+        var orders = orderRepository.findAllByPlaceId(placeRepository.findById(currentPlaceId).get());
+        if (newOnly) {
+            orders = orders.stream().filter(val -> val.getOrderStatus().equals(EOrderStatus.NEW)).collect(Collectors.toList());
+        }
+        return ResponseEntity.ok(orders);
     }
 
     @PostMapping("/create")
