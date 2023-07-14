@@ -1,6 +1,7 @@
 package ru.hookaorder.backend.feature.place.entity;
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,6 +27,8 @@ import java.util.stream.DoubleStream;
 @Setter
 @EqualsAndHashCode
 public class PlaceEntity extends BaseEntity {
+
+    private static final int MAX_PHONE_LENGTH = 15;
 
     /**
      * Name place.
@@ -57,6 +60,9 @@ public class PlaceEntity extends BaseEntity {
     @JsonProperty(value = "logo_url")
     @URL(regexp = "^(http|https).*")
     private String logoUrl;
+
+    @Column(name = "phone")
+    private String phone;
 
     @ManyToOne
     @JoinColumn(name = "owner_id", referencedColumnName = "id")
