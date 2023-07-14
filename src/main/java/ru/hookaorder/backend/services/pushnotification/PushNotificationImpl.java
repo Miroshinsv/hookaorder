@@ -56,7 +56,7 @@ public class PushNotificationImpl implements IPushNotificationService {
   @Override
   @SneakyThrows
   public String sendNotificationChangeOrderStatusUser(UserEntity user, OrderEntity order, EOrderStatus status) {
-    if (user.getFcmToken().isEmpty()) {
+    if (user.getFcmToken() == null) {
       return null;
     }
     switch (status) {
