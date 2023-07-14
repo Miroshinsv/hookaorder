@@ -27,6 +27,8 @@ import java.util.stream.DoubleStream;
 @EqualsAndHashCode
 public class PlaceEntity extends BaseEntity {
 
+    private static final Integer MAX_PHONE_LENGTH = 15;
+
     /**
      * Name place.
      * Can't be nullable
@@ -57,6 +59,9 @@ public class PlaceEntity extends BaseEntity {
     @JsonProperty(value = "logo_url")
     @URL(regexp = "^(http|https).*")
     private String logoUrl;
+
+    @Column(name = "phone", length = MAX_PHONE_LENGTH)
+    private String phone;
 
     @ManyToOne
     @JoinColumn(name = "owner_id", referencedColumnName = "id")
