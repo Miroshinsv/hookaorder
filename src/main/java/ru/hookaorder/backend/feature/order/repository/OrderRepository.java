@@ -15,7 +15,6 @@ public interface OrderRepository extends PagingAndSortingRepository<OrderEntity,
     List<OrderEntity> findAllByUserId(UserEntity userEntity);
     List<OrderEntity> findAllByUserId(UserEntity userEntity, Pageable pageable);
     List<OrderEntity> findAllByPlaceId(PlaceEntity placeEntity);
-    List<OrderEntity> findAllByPlaceIdAndUserId(PlaceEntity placeEntity, UserEntity userEntity);
     List<OrderEntity> findAllByUserIdAndOrderStatus(UserEntity userEntity, EOrderStatus orderStatus, Pageable pageable);
 
     @Query(value = "SELECT * FROM orders ord " +
