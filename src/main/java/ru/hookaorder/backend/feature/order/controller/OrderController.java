@@ -79,8 +79,9 @@ public class OrderController {
             return ResponseEntity.badRequest().body("unknown place id");
         }
 
+
         // check is owner or stuff
-        if (!place.stream().anyMatch(val -> val.getOwner().getId().equals(user.getId())) && place.stream().map(val -> val.getStaff().stream().filter(sutffPlace -> sutffPlace.getId().equals(user.getId()))).findAny().isPresent()) {
+        if (place.stream().noneMatch(val -> val.getOwner().getId().equals(user.getId())) && place.get().getStaff().stream().noneMatch(val->val.getId().equals(user.getId())) && !authentication.getAuthorities().contains(ERole.ADMIN)) {
             return ResponseEntity.badRequest().body("invalid place id");
         }
 
