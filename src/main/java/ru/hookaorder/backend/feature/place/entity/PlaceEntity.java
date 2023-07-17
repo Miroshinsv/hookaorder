@@ -27,7 +27,7 @@ import java.util.stream.DoubleStream;
 @EqualsAndHashCode
 public class PlaceEntity extends BaseEntity {
 
-    private static final Integer MAX_PHONE_LENGTH = 15;
+    private static final int MAX_PHONE_LENGTH = 15;
 
     /**
      * Name place.

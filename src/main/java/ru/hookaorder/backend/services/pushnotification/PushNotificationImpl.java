@@ -3,11 +3,7 @@ package ru.hookaorder.backend.services.pushnotification;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import com.google.firebase.messaging.BatchResponse;
-import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.Message;
-import com.google.firebase.messaging.Notification;
-import com.google.firebase.messaging.FirebaseMessagingException;
+import com.google.firebase.messaging.*;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,10 +14,12 @@ import ru.hookaorder.backend.feature.user.entity.UserEntity;
 
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
 public class PushNotificationImpl implements IPushNotificationService {
+  private static final int ZERO_ELEMENTS = 0;
   private final FirebaseMessaging firebaseMessaging;
 
   @Autowired
@@ -75,6 +73,9 @@ public class PushNotificationImpl implements IPushNotificationService {
   @SneakyThrows
   @Override
   public BatchResponse sendNotificationNewOrderToStaff(OrderEntity order, Set<String> FCMTokens) {
+    if (!isNotEmptyValidTokens(FCMTokens)) {
+      return null;
+    }
     return firebaseMessaging
         .sendAll(
             FCMTokens
@@ -86,6 +87,13 @@ public class PushNotificationImpl implements IPushNotificationService {
                 .collect(Collectors.toList()
                 )
         );
+  }
+
+  private boolean isNotEmptyValidTokens(Set<String> fcmTokens) {
+    return Objects.nonNull(fcmTokens)
+        && fcmTokens.stream().filter(Objects::nonNull)
+        .map(String::trim).filter(Predicate.not(String::isEmpty))
+        .count() > ZERO_ELEMENTS;
   }
 
   @Override
