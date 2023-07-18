@@ -24,6 +24,7 @@ import ru.hookaorder.backend.utils.JsonUtils;
 import ru.hookaorder.backend.utils.NullAwareBeanUtilsBean;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -86,9 +87,11 @@ public class OrderController {
         }
 
         // filter by new orders
-        var orders = orderRepository.findAllByPlaceId(placeRepository.findById(currentPlaceId).get());
+        List<OrderEntity> orders;
         if (newOnly) {
-            orders = orders.stream().filter(val -> val.getOrderStatus().equals(EOrderStatus.NEW)).collect(Collectors.toList());
+            orders = orderRepository.findAllByPlaceIdAndAndOrderStatus(place.get(), EOrderStatus.NEW);
+        } else {
+            orders = orderRepository.findAllByPlaceId(place.get());
         }
         return ResponseEntity.ok(orders);
     }

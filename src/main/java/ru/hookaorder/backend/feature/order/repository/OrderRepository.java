@@ -16,12 +16,7 @@ public interface OrderRepository extends PagingAndSortingRepository<OrderEntity,
     List<OrderEntity> findAllByUserId(UserEntity userEntity, Pageable pageable);
     List<OrderEntity> findAllByPlaceId(PlaceEntity placeEntity);
     List<OrderEntity> findAllByUserIdAndOrderStatus(UserEntity userEntity, EOrderStatus orderStatus, Pageable pageable);
-
-    @Query(value = "SELECT * FROM orders ord " +
-            "WHERE ord.places_id = ?1 " +
-            "AND ord.taken_at IS NULL AND ord.completed_at IS NULL AND ord.cancelled_at IS NULL",
-            nativeQuery = true)
-    List<OrderEntity> findNewByPlaceId(PlaceEntity placeEntity);
+    List<OrderEntity> findAllByPlaceIdAndAndOrderStatus(PlaceEntity placeEntity, EOrderStatus orderStatus);
 
     @Query(value = "SELECT * FROM orders ord " +
             "WHERE ord.places_id = ?1 AND ord.user_id = ?2 " +

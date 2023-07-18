@@ -32,7 +32,7 @@ public class UserEntity extends BaseEntity {
     private String email;
 
     @Column(name = "phone", nullable = false, unique = true)
-    @Pattern(regexp = "^[+]?[(]?[0-9]{3}[)]?[-\\s.]?[0-9]{3}[-\\s.]?[0-9]{4,6}$")
+    @Pattern(regexp = "^[(]?[0-9]{3}[)]?[-\\s.]?[0-9]{3}[-\\s.]?[0-9]{4,6}$")
     private String phone;
 
     @NotBlank
