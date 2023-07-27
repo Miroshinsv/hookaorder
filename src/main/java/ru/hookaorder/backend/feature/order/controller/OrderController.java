@@ -72,26 +72,26 @@ public class OrderController {
     @ApiOperation("Получение всех заказов по ID")
     @PreAuthorize("hasAnyAuthority('ADMIN','OWNER','HOOKAH_MASTER','WAITER')")
     ResponseEntity<?> getAllOrders(@PathVariable Long currentPlaceId, @RequestParam(name = "new", defaultValue = "false") Boolean newOnly, Authentication authentication) {
-        var place = placeRepository.findById(currentPlaceId);
+        var placeOptional = placeRepository.findById(currentPlaceId);
         var user = userRepository.findById((Long) authentication.getPrincipal()).get();
 
-        // Check if place is exist
-        if (place.isEmpty()) {
+        if (placeOptional.isEmpty()) {
             return ResponseEntity.badRequest().body("unknown place id");
         }
+        var place = placeOptional.get();
+        var owner = place.getOwner();
 
-
-        // check is owner or stuff
-        if (place.stream().noneMatch(val -> val.getOwner().getId().equals(user.getId())) && place.get().getStaff().stream().noneMatch(val->val.getId().equals(user.getId())) && !authentication.getAuthorities().contains(ERole.ADMIN)) {
+        if ((owner == null || !owner.getId().equals(user.getId()))
+            && place.getStaff().stream().noneMatch(val->val.getId().equals(user.getId()))
+            && !authentication.getAuthorities().contains(ERole.ADMIN)) {
             return ResponseEntity.badRequest().body("invalid place id");
         }
 
-        // filter by new orders
         List<OrderEntity> orders;
         if (newOnly) {
-            orders = orderRepository.findAllByPlaceIdAndAndOrderStatus(place.get(), EOrderStatus.NEW);
+            orders = orderRepository.findAllByPlaceIdAndAndOrderStatus(place, EOrderStatus.NEW);
         } else {
-            orders = orderRepository.findAllByPlaceId(place.get());
+            orders = orderRepository.findAllByPlaceId(place);
         }
         return ResponseEntity.ok(orders);
     }
