@@ -23,25 +23,13 @@ public class StaffController {
     @PreAuthorize("hasAnyAuthority('ADMIN', 'OWNER')")
     @PostMapping("/staff/add/{placeId}")
     public ResponseEntity<?> addStaffToPlace(@PathVariable Long placeId, @RequestBody Set<Long> users, Authentication authentication) {
-        return placeRepository.findById(placeId).map((val) -> {
-            if (CheckOwnerAndRolesAccess.isOwnerOrAdmin(val, authentication)) {
-                val.setStaff(Sets.newHashSet(userRepository.findAllById(users)));
-                return ResponseEntity.ok().body(placeRepository.save(val));
-            }
-            return ResponseEntity.badRequest().body("Access denied");
-        }).orElse(ResponseEntity.notFound().build());
+        return getUpdatedStaffResponse(placeId, users, authentication, true);
     }
 
     @PreAuthorize("hasAnyAuthority('ADMIN', 'OWNER')")
     @DeleteMapping("/staff/delete/{placeId}")
     public ResponseEntity<?> deleteStaffFromPlace(@PathVariable Long placeId, @RequestBody Set<Long> users, Authentication authentication) {
-        return placeRepository.findById(placeId).map((val) -> {
-            if (CheckOwnerAndRolesAccess.isOwnerOrAdmin(val, authentication)) {
-                val.getStaff().removeAll(Sets.newHashSet(userRepository.findAllById(users)));
-                return ResponseEntity.ok().body(placeRepository.save(val));
-            }
-            return ResponseEntity.badRequest().body("Access denied");
-        }).orElse(ResponseEntity.notFound().build());
+        return getUpdatedStaffResponse(placeId, users, authentication, false);
     }
 
     @PreAuthorize("hasAnyAuthority('ADMIN', 'OWNER')")
@@ -65,6 +53,23 @@ public class StaffController {
         return placeRepository.findById(placeId).map((val) -> {
             if (CheckOwnerAndRolesAccess.isOwnerOrAdmin(val, authentication)) {
                 return ResponseEntity.ok().body(val.getStaff().stream().map(UserEntity::getRatings));
+            }
+            return ResponseEntity.badRequest().body("Access denied");
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    private ResponseEntity<?> getUpdatedStaffResponse(Long placeId, Set<Long> users,
+                                                      Authentication authentication, boolean toAdd) {
+        return placeRepository.findById(placeId).map((place) -> {
+            if (CheckOwnerAndRolesAccess.isOwnerOrAdmin(place, authentication)) {
+                Set<UserEntity> staffUpdated = Sets.newHashSet(place.getStaff());
+                if (toAdd) {
+                    staffUpdated.addAll(Sets.newHashSet(userRepository.findAllById(users)));
+                } else {
+                    staffUpdated.removeAll(Sets.newHashSet(userRepository.findAllById(users)));
+                }
+                place.setStaff(staffUpdated);
+                return ResponseEntity.ok().body(placeRepository.save(place));
             }
             return ResponseEntity.badRequest().body("Access denied");
         }).orElse(ResponseEntity.notFound().build());
