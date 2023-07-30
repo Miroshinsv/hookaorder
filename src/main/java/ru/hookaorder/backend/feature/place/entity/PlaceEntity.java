@@ -72,8 +72,11 @@ public class PlaceEntity extends BaseEntity {
     @JoinColumn(name = "address_id", referencedColumnName = "id", nullable = false)
     private AddressEntity address;
 
-    @ManyToMany
-    @JoinColumn(name = "staff_id", referencedColumnName = "id")
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(name = "places_staff",
+        joinColumns = @JoinColumn(name = "place_entity_id"),
+        inverseJoinColumns = @JoinColumn(name = "staff_id")
+    )
     @JsonIgnore
     private Set<UserEntity> staff;
 

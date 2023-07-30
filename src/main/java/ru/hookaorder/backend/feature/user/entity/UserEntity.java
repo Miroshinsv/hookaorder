@@ -54,8 +54,7 @@ public class UserEntity extends BaseEntity {
     @JsonProperty(value = "roles", access = JsonProperty.Access.READ_ONLY)
     private Set<RoleEntity> rolesSet = Collections.emptySet();
 
-    @ManyToMany
-    @JoinColumn
+    @ManyToMany(mappedBy = "staff")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnore
     private Set<PlaceEntity> workPlaces = Collections.emptySet();
