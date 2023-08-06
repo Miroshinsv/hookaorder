@@ -13,7 +13,6 @@ import java.util.Set;
 @Setter
 public class JwtAuthentication implements Authentication {
     private boolean authenticated;
-    private String phone;
     private Long userId;
     private Set<ERole> roles;
 
@@ -49,7 +48,7 @@ public class JwtAuthentication implements Authentication {
 
     @Override
     public String getName() {
-        return phone;
+        return null;
     }
 
 }
