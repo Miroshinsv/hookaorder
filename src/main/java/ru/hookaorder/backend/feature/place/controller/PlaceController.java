@@ -4,7 +4,6 @@ package ru.hookaorder.backend.feature.place.controller;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
-import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,11 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import ru.hookaorder.backend.feature.BaseEntity;
 import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
 import ru.hookaorder.backend.feature.place.repository.PlaceRepository;
-import ru.hookaorder.backend.feature.roles.entity.ERole;
-import ru.hookaorder.backend.feature.user.repository.UserRepository;
+import ru.hookaorder.backend.feature.place.service.PlaceService;
 import ru.hookaorder.backend.utils.CheckOwnerAndRolesAccess;
 import ru.hookaorder.backend.utils.JsonUtils;
-import ru.hookaorder.backend.utils.NullAwareBeanUtilsBean;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,8 +25,9 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class PlaceController {
     private final PlaceRepository placeRepository;
-    private final UserRepository userRepository;
+    private final PlaceService placeService;
 
+    @Where(clause = "deleted_at IS NULL")
     @GetMapping("/get/{id}")
     @ApiOperation("Получение заведения по id")
     ResponseEntity<?> getPlaceById(@PathVariable Long id, Authentication authentication) {
@@ -39,6 +37,7 @@ public class PlaceController {
             .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @Where(clause = "deleted_at IS NULL")
     @GetMapping("/get/assigned")
     @ApiOperation("Получение моих мест")
     ResponseEntity<List<PlaceEntity>> getMyPlaces(Authentication authentication) {
@@ -63,40 +62,28 @@ public class PlaceController {
     }
 
     @PostMapping("/create")
-    @PreAuthorize("hasAnyAuthority('ADMIN','OWNER')")
     @ApiOperation("Создаем заведение")
+    @PreAuthorize("hasAnyAuthority('ADMIN','OWNER')")
     ResponseEntity<PlaceEntity> createPlace(@RequestBody PlaceEntity placeEntity, Authentication authentication) {
-        if (!authentication.getAuthorities().contains(ERole.ADMIN)) {
-            var user = userRepository.findById((Long) authentication.getPrincipal()).get();
-            placeEntity.setOwner(user);
-        }
-        return ResponseEntity.ok(placeRepository.save(placeEntity));
+        return ResponseEntity.ok(placeService.create(placeEntity, authentication));
     }
 
     @PostMapping("/update/{id}")
     @ApiOperation("Обновляем заведение по id")
     @PreAuthorize("hasAnyAuthority('ADMIN','OWNER')")
     ResponseEntity<?> updatePlace(@PathVariable Long id, @RequestBody PlaceEntity placeEntity, Authentication authentication) {
-        return placeRepository.findById(id).map((val) -> {
-            if (!CheckOwnerAndRolesAccess.isOwnerOrAdmin(placeEntity, authentication)) {
-                return ResponseEntity.badRequest().body("Access denied");
-            }
-            NullAwareBeanUtilsBean.copyNoNullProperties(placeEntity, val);
-            return ResponseEntity.ok(placeRepository.save(val));
-        }).orElse(ResponseEntity.badRequest().body("Invalid place id"));
+        return placeService.update(id, placeEntity, authentication)
+            .map(place -> ResponseEntity.ok(place))
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/disband/{id}")
     @ApiOperation("Удаляем заведение")
-    @SQLDelete(sql = "UPDATE places set deleted_at = now()::timestamp where id=?")
     @PreAuthorize("hasAuthority('ADMIN')")
     ResponseEntity<?> disbandById(@PathVariable Long id, Authentication authentication) {
-        return placeRepository.findById(id).map((val) -> {
-            if (CheckOwnerAndRolesAccess.isOwnerOrAdmin(val, authentication)) {
-                placeRepository.deleteById(val.getId());
-            }
-            return ResponseEntity.badRequest().body("Access denied");
-        }).orElse(ResponseEntity.badRequest().body("Place not found"));
+        return placeService.delete(id)
+            ? ResponseEntity.ok().build()
+            : ResponseEntity.notFound().build();
     }
 
     @PreAuthorize("hasAnyAuthority('ADMIN', 'OWNER')")

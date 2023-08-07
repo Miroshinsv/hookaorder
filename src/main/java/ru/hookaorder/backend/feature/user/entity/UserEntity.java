@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Where;
 import ru.hookaorder.backend.feature.BaseEntity;
 import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
 import ru.hookaorder.backend.feature.rating.entity.RatingEntity;
@@ -61,6 +62,7 @@ public class UserEntity extends BaseEntity {
 
     @OneToMany
     @JsonIgnore
+    @Where(clause = "deleted_at IS NULL")
     private Set<RatingEntity> ratings = Collections.emptySet();
 
     @Transient

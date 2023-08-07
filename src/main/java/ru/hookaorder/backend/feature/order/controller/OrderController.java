@@ -4,6 +4,7 @@ package ru.hookaorder.backend.feature.order.controller;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.annotations.Where;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -14,20 +15,16 @@ import org.springframework.web.bind.annotation.*;
 import ru.hookaorder.backend.feature.order.entity.EOrderStatus;
 import ru.hookaorder.backend.feature.order.entity.OrderEntity;
 import ru.hookaorder.backend.feature.order.repository.OrderRepository;
-import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
+import ru.hookaorder.backend.feature.order.service.OrderService;
 import ru.hookaorder.backend.feature.place.repository.PlaceRepository;
 import ru.hookaorder.backend.feature.roles.entity.ERole;
 import ru.hookaorder.backend.feature.user.entity.UserEntity;
 import ru.hookaorder.backend.feature.user.repository.UserRepository;
 import ru.hookaorder.backend.services.pushnotification.IPushNotificationService;
 import ru.hookaorder.backend.utils.JsonUtils;
-import ru.hookaorder.backend.utils.NullAwareBeanUtilsBean;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/order")
@@ -37,11 +34,14 @@ public class OrderController {
 
     private final static int FIRST_PAGE = 0;
     private final OrderRepository orderRepository;
+
+    private final OrderService orderService;
     private final UserRepository userRepository;
     private final PlaceRepository placeRepository;
     private final IPushNotificationService pushNotificationService;
 
     @GetMapping("/get/{id}")
+    @Where(clause = "deleted_at IS NULL")
     @ApiOperation("Получение заказа по id")
     ResponseEntity<?> getOrderById(@PathVariable Long id, Authentication authentication) {
         return orderRepository.findById(id).map((val) -> {
@@ -53,6 +53,7 @@ public class OrderController {
     }
 
     @GetMapping("/get/my")
+    @Where(clause = "deleted_at IS NULL")
     @ApiOperation("Получение собственных заказов")
     ResponseEntity<?> getMyOrders(@RequestParam(name = "status", defaultValue = "") String status, @RequestParam(name = "count", defaultValue = "0") Integer count, Authentication authentication) {
         UserEntity user = userRepository.findById((Long) authentication.getPrincipal()).orElseThrow();
@@ -69,6 +70,7 @@ public class OrderController {
     }
 
     @GetMapping("/get/all/{currentPlaceId}")
+    @Where(clause = "deleted_at IS NULL")
     @ApiOperation("Получение всех заказов по ID")
     @PreAuthorize("hasAnyAuthority('ADMIN','OWNER','HOOKAH_MASTER','WAITER')")
     ResponseEntity<?> getAllOrders(@PathVariable Long currentPlaceId, @RequestParam(name = "new", defaultValue = "false") Boolean newOnly, Authentication authentication) {
@@ -99,33 +101,17 @@ public class OrderController {
     @PostMapping("/create")
     @ApiOperation("Создание заказа")
     ResponseEntity<?> createOrder(@RequestBody OrderEntity orderEntity, Authentication authentication) {
-        PlaceEntity place = placeRepository.findById(orderEntity.getPlaceId().getId()).orElseThrow();
-        orderEntity.setPlaceId(place);
-        UserEntity userOrdered = userRepository.findById((Long) authentication.getPrincipal()).orElseThrow();
-
-        orderEntity.setUserId(userOrdered);
-        orderEntity.setOrderStatus(EOrderStatus.NEW);
-        orderRepository.save(orderEntity);
-
-        Set<String> userFMCTokenList = place.getStaff().stream().map(UserEntity::getFcmToken).filter(Objects::nonNull).collect(Collectors.toSet());
-
-        if (place.getOwner() != null && place.getOwner().getFcmToken() != null) {
-            userFMCTokenList.add(place.getOwner().getFcmToken());
-        }
-        pushNotificationService.sendNotificationNewOrderToStaff(orderEntity, userFMCTokenList);
-        return ResponseEntity.ok(JsonUtils.checkAndApplyPhoneFilter(orderEntity, authentication));
+        return orderService.create(orderEntity, authentication, true)
+            .map(order -> ResponseEntity.ok(JsonUtils.checkAndApplyPhoneFilter(order, authentication)))
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/update/{id}")
     @ApiOperation("Обновление заказа по id")
     ResponseEntity<?> updateOrder(@PathVariable Long id, @RequestBody OrderEntity orderEntity, Authentication authentication) {
-        return orderRepository.findById(id).map((val) -> {
-            if (isOrderOwnedByUser(val, authentication) || authentication.getAuthorities().contains(ERole.ADMIN)) {
-                NullAwareBeanUtilsBean.copyNoNullProperties(orderEntity, val);
-                return ResponseEntity.ok().body(JsonUtils.checkAndApplyPhoneFilter(orderRepository.save(val), authentication));
-            }
-            return ResponseEntity.badRequest().body("Access denied");
-        }).orElse(ResponseEntity.badRequest().build());
+        return orderService.update(id, orderEntity, authentication)
+            .map(order -> ResponseEntity.ok(JsonUtils.checkAndApplyPhoneFilter(order, authentication)))
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/taken/{id}")
