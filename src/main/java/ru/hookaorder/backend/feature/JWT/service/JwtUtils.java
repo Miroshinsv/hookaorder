@@ -1,28 +1,20 @@
 package ru.hookaorder.backend.feature.JWT.service;
 
-import io.jsonwebtoken.Claims;
-import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import ru.hookaorder.backend.feature.roles.entity.ERole;
-import ru.hookaorder.backend.feature.user.repository.UserRepository;
-
+import ru.hookaorder.backend.feature.user.entity.UserEntity;
 import java.util.stream.Collectors;
 
-@AllArgsConstructor
-@Component
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class JwtUtils {
-    private static UserRepository userRepository;
 
-    @Autowired
-    public JwtUtils(UserRepository userRepository) {
-        JwtUtils.userRepository = userRepository;
-    }
-
-    public static JwtAuthentication generate(Claims claims) {
+    public static JwtAuthentication generate(UserEntity user) {
         final JwtAuthentication jwtInfoToken = new JwtAuthentication();
-        jwtInfoToken.setRoles(userRepository.findById(Long.valueOf(claims.getSubject())).get().getRolesSet().stream().map(val -> ERole.valueOf(val.getRoleName())).collect(Collectors.toSet()));
-        jwtInfoToken.setUserId(Long.valueOf(claims.getSubject()));
+        jwtInfoToken.setRoles(user.getRolesSet().stream().
+            map(val -> ERole.valueOf(val.getRoleName()))
+            .collect(Collectors.toSet()));
+        jwtInfoToken.setUserId(user.getId());
         return jwtInfoToken;
     }
 }
