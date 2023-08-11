@@ -4,7 +4,6 @@ package ru.hookaorder.backend.feature.order.controller;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.annotations.Where;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -41,11 +40,13 @@ public class OrderController {
     private final IPushNotificationService pushNotificationService;
 
     @GetMapping("/get/{id}")
-    @Where(clause = "deleted_at IS NULL")
     @ApiOperation("Получение заказа по id")
     ResponseEntity<?> getOrderById(@PathVariable Long id, Authentication authentication) {
         return orderRepository.findById(id).map((val) -> {
-            if (isOrderOwnedByUser(val, authentication) || authentication.getAuthorities().contains(ERole.ADMIN) || val.getPlaceId().getOwner().equals(authentication.getPrincipal())) {
+            if (isOrderOwnedByUser(val, authentication) ||
+                isOrderProcessedByExecutor(val, authentication) ||
+                isPlaceOwner(val.getPlaceId().getOwner(), authentication) ||
+                authentication.getAuthorities().contains(ERole.ADMIN)) {
                 return ResponseEntity.ok().body(JsonUtils.checkAndApplyPhoneFilter(val, authentication));
             }
             return ResponseEntity.badRequest().body("Access denied");
@@ -53,7 +54,6 @@ public class OrderController {
     }
 
     @GetMapping("/get/my")
-    @Where(clause = "deleted_at IS NULL")
     @ApiOperation("Получение собственных заказов")
     ResponseEntity<?> getMyOrders(@RequestParam(name = "status", defaultValue = "") String status, @RequestParam(name = "count", defaultValue = "0") Integer count, Authentication authentication) {
         UserEntity user = userRepository.findById((Long) authentication.getPrincipal()).orElseThrow();
@@ -70,7 +70,6 @@ public class OrderController {
     }
 
     @GetMapping("/get/all/{currentPlaceId}")
-    @Where(clause = "deleted_at IS NULL")
     @ApiOperation("Получение всех заказов по ID")
     @PreAuthorize("hasAnyAuthority('ADMIN','OWNER','HOOKAH_MASTER','WAITER')")
     ResponseEntity<?> getAllOrders(@PathVariable Long currentPlaceId, @RequestParam(name = "new", defaultValue = "false") Boolean newOnly, Authentication authentication) {
@@ -167,12 +166,17 @@ public class OrderController {
     private boolean isOrderProcessedByExecutor(OrderEntity order, Authentication authentication) {
         var roles = authentication.getAuthorities();
         if (roles.contains(ERole.HOOKAH_MASTER) || roles.contains(ERole.WAITER)) {
-            return userRepository.findById((Long) authentication.getPrincipal()).get().getWorkPlaces().stream().filter((place) -> place.equals(order.getPlaceId())).count() > 0;
+            return userRepository.findById((Long) authentication.getPrincipal()).get().getWorkPlaces().stream()
+                .filter((place) -> place.equals(order.getPlaceId())).count() > 0;
         }
         return false;
     }
 
     private boolean isOrderOwnedByUser(OrderEntity order, Authentication authentication) {
-        return order.getUserId().getId().equals(authentication.getPrincipal());
+        return order.getUserId() != null && order.getUserId().getId().equals(authentication.getPrincipal());
+    }
+
+    private boolean isPlaceOwner(UserEntity owner, Authentication authentication) {
+        return owner != null && owner.getId().equals(authentication.getPrincipal());
     }
 }

@@ -4,7 +4,6 @@ package ru.hookaorder.backend.feature.place.controller;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
-import org.hibernate.annotations.Where;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -27,7 +26,6 @@ public class PlaceController {
     private final PlaceRepository placeRepository;
     private final PlaceService placeService;
 
-    @Where(clause = "deleted_at IS NULL")
     @GetMapping("/get/{id}")
     @ApiOperation("Получение заведения по id")
     ResponseEntity<?> getPlaceById(@PathVariable Long id, Authentication authentication) {
@@ -37,23 +35,19 @@ public class PlaceController {
             .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @Where(clause = "deleted_at IS NULL")
     @GetMapping("/get/assigned")
     @ApiOperation("Получение моих мест")
     ResponseEntity<List<PlaceEntity>> getMyPlaces(Authentication authentication) {
-        return ResponseEntity.ok(placeRepository
-                .findAll()
+        return ResponseEntity.ok(
+            placeRepository.findAll()
                 .stream()
-                .filter((val) -> {
-                    List<Long> staffIDs = val.getStaff()
-                            .stream().map(BaseEntity::getId).toList();
-                    return val.getOwner().getId().equals(authentication.getPrincipal()) ||
-                            staffIDs.contains(authentication.getPrincipal());
-                })
-                .collect(Collectors.toList()));
+                .filter((place) -> {
+                    List<Long> staffIDs = place.getStaff().stream().map(BaseEntity::getId).toList();
+                    return (place.getOwner() != null && place.getOwner().getId().equals(authentication.getPrincipal()))
+                        || staffIDs.contains(authentication.getPrincipal());
+                }).collect(Collectors.toList()));
     }
 
-    @Where(clause = "deleted_at IS NULL")
     @GetMapping("/get/all")
     @ApiOperation("Получение списка всех заведений")
     ResponseEntity<?> getAllPlaces(Authentication authentication) {

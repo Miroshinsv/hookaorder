@@ -34,7 +34,6 @@ public class UserServiceImpl implements UserService{
         return Optional.of(userRepository.save(userEntity));
     }
 
-    @Where(clause = "deleted_at IS NULL")
     @Override
     public Optional<UserEntity> update(Long id, UserEntity userEntity, Authentication authentication) {
         return userRepository.findById(id).map((user) -> {
@@ -46,8 +45,6 @@ public class UserServiceImpl implements UserService{
         }).orElse(EMPTY_USER);
     }
 
-    @Where(clause = "deleted_at IS NULL")
-    @SQLDelete(sql = "UPDATE users set deleted_at = now()::timestamp where id=?")
     @Override
     public boolean delete(Long id) {
         return userRepository.findById(id).map((user) -> {

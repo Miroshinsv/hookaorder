@@ -1,8 +1,6 @@
 package ru.hookaorder.backend.feature.order.service;
 
 import lombok.AllArgsConstructor;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import ru.hookaorder.backend.feature.order.entity.EOrderStatus;
@@ -59,7 +57,6 @@ public class OrderServiceImpl implements OrderService {
         return Optional.of(orderEntity);
     }
 
-    @Where(clause = "deleted_at IS NULL")
     @Override
     public Optional<OrderEntity> update(Long id, OrderEntity orderEntity, Authentication authentication) {
         return orderRepository.findById(id).map((orderToUpdate) -> {
@@ -72,8 +69,6 @@ public class OrderServiceImpl implements OrderService {
         }).orElse(EMPTY_ORDER);
     }
 
-    @Where(clause = "deleted_at IS NULL")
-    @SQLDelete(sql = "UPDATE orders set deleted_at = now()::timestamp where id=?")
     @Override
     public boolean delete(Long id) {
         return orderRepository.findById(id).map((order) -> {

@@ -3,7 +3,6 @@ package ru.hookaorder.backend.feature.user.controller;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
-import org.hibernate.annotations.Where;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -24,7 +23,6 @@ public class UserController {
 
     @GetMapping(value = "/get/{id}")
     @ApiOperation("Получение пользователя по id")
-    @Where(clause = "is_enabled IS TRUE AND deleted_at IS NULL")
     ResponseEntity<?> getUserById(@PathVariable Long id, Authentication authentication) {
         return userRepository.findById(id)
             .map((val) -> ResponseEntity.ok().body(JsonUtils.checkAndApplyPhoneFilter(val, authentication)))
@@ -33,17 +31,17 @@ public class UserController {
 
     @PostMapping(value = "/create")
     @ApiOperation("Создание пользователя")
-    ResponseEntity<?> createUser(@RequestBody UserEntity user) {
-        return userService.create(user)
-            .map(order -> ResponseEntity.ok(user))
+    ResponseEntity<?> createUser(@RequestBody UserEntity userEntity) {
+        return userService.create(userEntity)
+            .map(user -> ResponseEntity.ok(user))
             .orElse(ResponseEntity.badRequest().build());
     }
 
     @PutMapping(value = "/update/{id}")
     @ApiOperation("Обновление пользователя по id")
-    ResponseEntity<?> updateUserById(@PathVariable Long id, @RequestBody UserEntity user, Authentication authentication) {
-        return userService.update(id, user, authentication)
-            .map(place -> ResponseEntity.ok(user))
+    ResponseEntity<?> updateUserById(@PathVariable Long id, @RequestBody UserEntity userEntity, Authentication authentication) {
+        return userService.update(id, userEntity, authentication)
+            .map(user -> ResponseEntity.ok(user))
             .orElse(ResponseEntity.notFound().build());
     }
 
@@ -59,7 +57,6 @@ public class UserController {
     @GetMapping(value = "/get/all")
     @ApiOperation("Получение списка всех пользователя")
     @PreAuthorize("hasAuthority('ADMIN')")
-    @Where(clause = "is_enabled IS TRUE AND deleted_at IS NULL")
     ResponseEntity<?> getAllUsers() {
         return ResponseEntity.ok().body(userRepository.findAll());
     }

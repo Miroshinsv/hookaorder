@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 import org.hibernate.validator.constraints.URL;
 import ru.hookaorder.backend.feature.BaseEntity;
 import ru.hookaorder.backend.feature.address.entity.AddressEntity;
@@ -25,6 +27,8 @@ import java.util.stream.DoubleStream;
 @Getter
 @Setter
 @EqualsAndHashCode
+@Where(clause = "deleted_at IS NULL")
+@SQLDelete(sql = "UPDATE places set deleted_at = now()::timestamp where id=?")
 public class PlaceEntity extends BaseEntity {
 
     private static final int MAX_PHONE_LENGTH = 15;

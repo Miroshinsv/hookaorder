@@ -87,17 +87,17 @@ public class AdminController {
 
     @PostMapping(value = "/user/create")
     @ApiOperation("Админ: Создание пользователя")
-    ResponseEntity<?> createUser(@RequestBody UserEntity user, Authentication authentication) {
-        return userService.create(user)
-            .map(order -> ResponseEntity.ok(user))
+    ResponseEntity<?> createUser(@RequestBody UserEntity userEntity, Authentication authentication) {
+        return userService.create(userEntity)
+            .map(user -> ResponseEntity.ok(user))
             .orElse(ResponseEntity.badRequest().build());
     }
 
     @PutMapping(value = "/user/update/{id}")
     @ApiOperation("Админ: Обновление пользователя по id")
-    ResponseEntity<?> updateUserById(@PathVariable Long id, @RequestBody UserEntity user, Authentication authentication) {
-        return userService.update(id, user, authentication)
-            .map(place -> ResponseEntity.ok(user))
+    ResponseEntity<?> updateUserById(@PathVariable Long id, @RequestBody UserEntity userEntity, Authentication authentication) {
+        return userService.update(id, userEntity, authentication)
+            .map(user -> ResponseEntity.ok(user))
             .orElse(ResponseEntity.notFound().build());
     }
 

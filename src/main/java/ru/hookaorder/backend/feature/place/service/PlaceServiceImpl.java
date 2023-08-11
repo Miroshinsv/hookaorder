@@ -1,9 +1,6 @@
 package ru.hookaorder.backend.feature.place.service;
 
-import com.sun.jdi.connect.Connector;
 import lombok.AllArgsConstructor;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
@@ -32,11 +29,10 @@ public class PlaceServiceImpl implements PlaceService{
         return placeRepository.save(placeEntity);
     }
 
-    @Where(clause = "deleted_at IS NULL")
     @Override
     public Optional<PlaceEntity> update(Long id, PlaceEntity placeEntity, Authentication authentication) {
         return placeRepository.findById(id).map((place) -> {
-            if (!CheckOwnerAndRolesAccess.isOwnerOrAdmin(placeEntity, authentication)) {
+            if (!CheckOwnerAndRolesAccess.isOwnerOrAdmin(place, authentication)) {
                 return EMPTY_PLACE;
             }
             NullAwareBeanUtilsBean.copyNoNullProperties(placeEntity, place);
@@ -44,8 +40,6 @@ public class PlaceServiceImpl implements PlaceService{
         }).orElse(EMPTY_PLACE);
     }
 
-    @Where(clause = "deleted_at IS NULL")
-    @SQLDelete(sql = "UPDATE places set deleted_at = now()::timestamp where id=?")
     @Override
     public boolean delete(Long id) {
         return placeRepository.findById(id).map((place) -> {
