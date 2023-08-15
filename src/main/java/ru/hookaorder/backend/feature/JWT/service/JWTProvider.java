@@ -1,6 +1,7 @@
 package ru.hookaorder.backend.feature.JWT.service;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.NonNull;
@@ -32,24 +33,14 @@ public class JWTProvider {
         final LocalDateTime now = LocalDateTime.now();
         final Instant accessExpirationInstant = now.plusDays(30).atZone(ZoneId.systemDefault()).toInstant();
         final Date accessExpiration = Date.from(accessExpirationInstant);
-        return Jwts.builder()
-                .setSubject(user.getPhone())
-                .setExpiration(accessExpiration)
-                .signWith(jwtAccessSecret)
-                .claim("roles", user.getRolesSet())
-                .claim("userId", user.getId())
-                .compact();
+        return Jwts.builder().setSubject(user.getId().toString()).setExpiration(accessExpiration).signWith(jwtAccessSecret).compact();
     }
 
     public String generateRefreshToken(@NonNull UserEntity user) {
         final LocalDateTime now = LocalDateTime.now();
         final Instant refreshExpirationInstant = now.plusDays(30).atZone(ZoneId.systemDefault()).toInstant();
         final Date refreshExpiration = Date.from(refreshExpirationInstant);
-        return Jwts.builder()
-                .setSubject(user.getPhone())
-                .setExpiration(refreshExpiration)
-                .signWith(jwtRefreshSecret)
-                .compact();
+        return Jwts.builder().setSubject(user.getId().toString()).setExpiration(refreshExpiration).signWith(jwtRefreshSecret).compact();
     }
 
     public boolean validateAccessToken(@NonNull String accessToken) {
@@ -61,22 +52,9 @@ public class JWTProvider {
     }
 
     private boolean validateToken(@NonNull String token, @NonNull Key secret) {
-        try {
-            Jwts.parserBuilder()
-                    .setSigningKey(secret)
-                    .build()
-                    .parseClaimsJws(token);
-            return true;
-        } catch (ExpiredJwtException expEx) {
-            log.error("Token expired", expEx);
-        } catch (UnsupportedJwtException unsEx) {
-            log.error("Unsupported jwt", unsEx);
-        } catch (MalformedJwtException mjEx) {
-            log.error("Malformed jwt", mjEx);
-        } catch (Exception e) {
-            log.error("invalid token", e);
-        }
-        return false;
+        Jwts.parserBuilder().setSigningKey(secret).build().parseClaimsJws(token);
+        return true;
+
     }
 
     public Claims getAccessClaims(@NonNull String token) {
@@ -88,10 +66,6 @@ public class JWTProvider {
     }
 
     private Claims getClaims(@NonNull String token, @NonNull Key secret) {
-        return Jwts.parserBuilder()
-                .setSigningKey(secret)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        return Jwts.parserBuilder().setSigningKey(secret).build().parseClaimsJws(token).getBody();
     }
 }
