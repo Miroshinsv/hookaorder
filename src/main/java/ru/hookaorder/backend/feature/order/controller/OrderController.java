@@ -24,6 +24,8 @@ import ru.hookaorder.backend.utils.JsonUtils;
 import ru.hookaorder.backend.utils.NullAwareBeanUtilsBean;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -72,23 +74,25 @@ public class OrderController {
     @PreAuthorize("hasAnyAuthority('ADMIN','OWNER','HOOKAH_MASTER','WAITER')")
     ResponseEntity<?> getAllOrders(@PathVariable Long currentPlaceId, @RequestParam(name = "new", defaultValue = "false") Boolean newOnly, Authentication authentication) {
         var place = placeRepository.findById(currentPlaceId);
-        var user = userRepository.findById((Long) authentication.getPrincipal()).get();
 
         // Check if place is exist
         if (place.isEmpty()) {
             return ResponseEntity.badRequest().body("unknown place id");
         }
 
+        var user = userRepository.findById((Long) authentication.getPrincipal()).get();
 
         // check is owner or stuff
-        if (place.stream().noneMatch(val -> val.getOwner().getId().equals(user.getId())) && place.get().getStaff().stream().noneMatch(val->val.getId().equals(user.getId())) && !authentication.getAuthorities().contains(ERole.ADMIN)) {
+        if (place.stream().noneMatch(val -> val.getOwner().getId().equals(user.getId())) && place.get().getStaff().stream().noneMatch(val -> val.getId().equals(user.getId())) && !authentication.getAuthorities().contains(ERole.ADMIN)) {
             return ResponseEntity.badRequest().body("invalid place id");
         }
 
         // filter by new orders
-        var orders = orderRepository.findAllByPlaceId(placeRepository.findById(currentPlaceId).get());
+        List<OrderEntity> orders;
         if (newOnly) {
-            orders = orders.stream().filter(val -> val.getOrderStatus().equals(EOrderStatus.NEW)).collect(Collectors.toList());
+            orders = orderRepository.findAllByPlaceIdAndAndOrderStatus(place.get(), EOrderStatus.NEW.name());
+        } else {
+            orders = orderRepository.findAllByPlaceId(place.get());
         }
         return ResponseEntity.ok(orders);
     }
@@ -165,7 +169,7 @@ public class OrderController {
             return ResponseEntity.badRequest().body("COMPLETED orders couldn't be cancelled");
         }
         return orderRepository.findById(id).map((val) -> {
-            if (isOrderOwnedByUser(val, authentication) || authentication.getAuthorities().contains(ERole.ADMIN)) {
+            if (isOrderOwnedByUser(val, authentication) || authentication.getAuthorities().contains(ERole.ADMIN) || isOrderProcessedByExecutor(val, authentication)) {
                 val.setCancelledAt(LocalDate.now());
                 val.setOrderStatus(EOrderStatus.CANCELLED);
                 pushNotificationService.sendNotificationChangeOrderStatusUser(val.getUserId(), val, EOrderStatus.CANCELLED);
@@ -176,8 +180,8 @@ public class OrderController {
     }
 
     private boolean isOrderProcessedByExecutor(OrderEntity order, Authentication authentication) {
-        var roles = authentication.getAuthorities();
-        if (roles.contains(ERole.HOOKAH_MASTER) || roles.contains(ERole.WAITER)) {
+        var user = userRepository.findById((Long) authentication.getPrincipal()).get();
+        if (user.getRolesSet().stream().anyMatch(Arrays.asList(ERole.HOOKAH_MASTER, ERole.WAITER)::contains)) {
             return userRepository.findById((Long) authentication.getPrincipal()).get().getWorkPlaces().stream().filter((place) -> place.equals(order.getPlaceId())).count() > 0;
         }
         return false;
