@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 import ru.hookaorder.backend.feature.BaseEntity;
 import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
 import ru.hookaorder.backend.feature.rating.entity.RatingEntity;
@@ -22,6 +24,9 @@ import java.util.stream.DoubleStream;
 @Setter
 @EqualsAndHashCode(exclude = "workPlaces")
 @Table(name = "users")
+@JsonFilter("phoneFilter")
+@Where(clause = "is_enabled=true AND deleted_at IS NULL")
+@SQLDelete(sql = "UPDATE users set deleted_at = now()::timestamp where id=?")
 public class UserEntity extends BaseEntity {
 
     @Column(name = "name")
@@ -59,7 +64,7 @@ public class UserEntity extends BaseEntity {
     @JsonIgnore
     private Set<PlaceEntity> workPlaces = Collections.emptySet();
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL)
     @JsonIgnore
     private Set<RatingEntity> ratings = Collections.emptySet();
 

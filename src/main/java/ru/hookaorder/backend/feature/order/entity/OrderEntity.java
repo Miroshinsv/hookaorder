@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 import ru.hookaorder.backend.feature.BaseEntity;
 import ru.hookaorder.backend.feature.comment.entity.CommentEntity;
 import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
@@ -17,6 +19,8 @@ import java.time.LocalDate;
 @Setter
 @Getter
 @EqualsAndHashCode
+@Where(clause = "deleted_at IS NULL")
+@SQLDelete(sql = "UPDATE orders set deleted_at = now()::timestamp where id=?")
 public class OrderEntity extends BaseEntity {
 
     @ManyToOne

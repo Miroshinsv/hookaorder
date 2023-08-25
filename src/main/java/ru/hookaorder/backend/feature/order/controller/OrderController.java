@@ -14,20 +14,16 @@ import org.springframework.web.bind.annotation.*;
 import ru.hookaorder.backend.feature.order.entity.EOrderStatus;
 import ru.hookaorder.backend.feature.order.entity.OrderEntity;
 import ru.hookaorder.backend.feature.order.repository.OrderRepository;
-import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
+import ru.hookaorder.backend.feature.order.service.OrderService;
 import ru.hookaorder.backend.feature.place.repository.PlaceRepository;
 import ru.hookaorder.backend.feature.roles.entity.ERole;
 import ru.hookaorder.backend.feature.user.entity.UserEntity;
 import ru.hookaorder.backend.feature.user.repository.UserRepository;
 import ru.hookaorder.backend.services.pushnotification.IPushNotificationService;
 import ru.hookaorder.backend.utils.JsonUtils;
-import ru.hookaorder.backend.utils.NullAwareBeanUtilsBean;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/order")
@@ -37,6 +33,8 @@ public class OrderController {
 
     private final static int FIRST_PAGE = 0;
     private final OrderRepository orderRepository;
+
+    private final OrderService orderService;
     private final UserRepository userRepository;
     private final PlaceRepository placeRepository;
     private final IPushNotificationService pushNotificationService;
@@ -45,7 +43,10 @@ public class OrderController {
     @ApiOperation("Получение заказа по id")
     ResponseEntity<?> getOrderById(@PathVariable Long id, Authentication authentication) {
         return orderRepository.findById(id).map((val) -> {
-            if (isOrderOwnedByUser(val, authentication) || authentication.getAuthorities().contains(ERole.ADMIN) || val.getPlaceId().getOwner().equals(authentication.getPrincipal())) {
+            if (isOrderOwnedByUser(val, authentication) ||
+                isOrderProcessedByExecutor(val, authentication) ||
+                isPlaceOwner(val.getPlaceId().getOwner(), authentication) ||
+                authentication.getAuthorities().contains(ERole.ADMIN)) {
                 return ResponseEntity.ok().body(JsonUtils.checkAndApplyPhoneFilter(val, authentication));
             }
             return ResponseEntity.badRequest().body("Access denied");
@@ -99,33 +100,17 @@ public class OrderController {
     @PostMapping("/create")
     @ApiOperation("Создание заказа")
     ResponseEntity<?> createOrder(@RequestBody OrderEntity orderEntity, Authentication authentication) {
-        PlaceEntity place = placeRepository.findById(orderEntity.getPlaceId().getId()).orElseThrow();
-        orderEntity.setPlaceId(place);
-        UserEntity userOrdered = userRepository.findById((Long) authentication.getPrincipal()).orElseThrow();
-
-        orderEntity.setUserId(userOrdered);
-        orderEntity.setOrderStatus(EOrderStatus.NEW);
-        orderRepository.save(orderEntity);
-
-        Set<String> userFMCTokenList = place.getStaff().stream().map(UserEntity::getFcmToken).filter(Objects::nonNull).collect(Collectors.toSet());
-
-        if (place.getOwner() != null && place.getOwner().getFcmToken() != null) {
-            userFMCTokenList.add(place.getOwner().getFcmToken());
-        }
-        pushNotificationService.sendNotificationNewOrderToStaff(orderEntity, userFMCTokenList);
-        return ResponseEntity.ok(JsonUtils.checkAndApplyPhoneFilter(orderEntity, authentication));
+        return orderService.create(orderEntity, authentication, true)
+            .map(order -> ResponseEntity.ok(JsonUtils.checkAndApplyPhoneFilter(order, authentication)))
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/update/{id}")
     @ApiOperation("Обновление заказа по id")
     ResponseEntity<?> updateOrder(@PathVariable Long id, @RequestBody OrderEntity orderEntity, Authentication authentication) {
-        return orderRepository.findById(id).map((val) -> {
-            if (isOrderOwnedByUser(val, authentication) || authentication.getAuthorities().contains(ERole.ADMIN)) {
-                NullAwareBeanUtilsBean.copyNoNullProperties(orderEntity, val);
-                return ResponseEntity.ok().body(JsonUtils.checkAndApplyPhoneFilter(orderRepository.save(val), authentication));
-            }
-            return ResponseEntity.badRequest().body("Access denied");
-        }).orElse(ResponseEntity.badRequest().build());
+        return orderService.update(id, orderEntity, authentication)
+            .map(order -> ResponseEntity.ok(JsonUtils.checkAndApplyPhoneFilter(order, authentication)))
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/taken/{id}")
@@ -181,12 +166,17 @@ public class OrderController {
     private boolean isOrderProcessedByExecutor(OrderEntity order, Authentication authentication) {
         var roles = authentication.getAuthorities();
         if (roles.contains(ERole.HOOKAH_MASTER) || roles.contains(ERole.WAITER)) {
-            return userRepository.findById((Long) authentication.getPrincipal()).get().getWorkPlaces().stream().filter((place) -> place.equals(order.getPlaceId())).count() > 0;
+            return userRepository.findById((Long) authentication.getPrincipal()).get().getWorkPlaces().stream()
+                .filter((place) -> place.equals(order.getPlaceId())).count() > 0;
         }
         return false;
     }
 
     private boolean isOrderOwnedByUser(OrderEntity order, Authentication authentication) {
-        return order.getUserId().getId().equals(authentication.getPrincipal());
+        return order.getUserId() != null && order.getUserId().getId().equals(authentication.getPrincipal());
+    }
+
+    private boolean isPlaceOwner(UserEntity owner, Authentication authentication) {
+        return owner != null && owner.getId().equals(authentication.getPrincipal());
     }
 }

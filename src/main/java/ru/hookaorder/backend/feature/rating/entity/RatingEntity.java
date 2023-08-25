@@ -3,6 +3,8 @@ package ru.hookaorder.backend.feature.rating.entity;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 import ru.hookaorder.backend.feature.BaseEntity;
 import ru.hookaorder.backend.feature.comment.entity.CommentEntity;
 
@@ -17,6 +19,8 @@ import static ru.hookaorder.backend.config.Vars.MIN_RATING_VALUE;
 @Table(name = "ratings")
 @Getter
 @Setter
+@Where(clause = "deleted_at IS NULL")
+@SQLDelete(sql = "UPDATE ratings set deleted_at = now()::timestamp where id=?")
 public class RatingEntity extends BaseEntity {
 
     @Column(name = "rating_value")
