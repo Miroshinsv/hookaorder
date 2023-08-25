@@ -23,6 +23,7 @@ public final class JwtUtils {
         final JwtAuthentication jwtInfoToken = new JwtAuthentication();
         jwtInfoToken.setRoles(userRepository.findById(Long.valueOf(claims.getSubject())).get().getRolesSet().stream().map(val -> ERole.valueOf(val.getRoleName())).collect(Collectors.toSet()));
         jwtInfoToken.setUserId(Long.valueOf(claims.getSubject()));
+        jwtInfoToken.setUserId(claims.get("userId", Long.class));
         return jwtInfoToken;
     }
 }
