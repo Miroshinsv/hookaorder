@@ -21,16 +21,17 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .csrf()
-                .and()
+                .disable()
                 .cors()
                 .configurationSource(request -> {
                     var cors = new CorsConfiguration();
+                    cors.addAllowedOrigin(CorsConfiguration.ALL);
                     cors.setAllowedOrigins(List.of("http://127.0.0.1:80", "http://web.hookahorder.ru/","http://hookahorder.ru/"));
                     cors.setAllowedMethods(List.of("GET","POST", "PUT", "DELETE", "OPTIONS"));
                     cors.setAllowedHeaders(List.of("*"));
                     return cors;
                 })
-                .disable()
+                .and()
                 .authorizeHttpRequests()
                 .antMatchers("/auth/login", "/place/**", "/user/create").permitAll()
                 .anyRequest()
