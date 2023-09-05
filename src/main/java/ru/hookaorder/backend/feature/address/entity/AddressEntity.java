@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 import ru.hookaorder.backend.feature.BaseEntity;
 
 import javax.persistence.Column;
@@ -16,6 +18,8 @@ import javax.persistence.Table;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Where(clause = "deleted_at IS NULL")
+@SQLDelete(sql = "UPDATE address set deleted_at = now()::timestamp where id=?")
 public class AddressEntity extends BaseEntity {
     @Column(name = "country")
     private String country;

@@ -19,11 +19,8 @@ import ru.hookaorder.backend.feature.user.repository.UserRepository;
 public class RatingController {
 
     private final UserRepository userRepository;
-
     private final PlaceRepository placeRepository;
-
     private final RatingRepository ratingRepository;
-
 
     @PostMapping(value = "/set/staff/{staffUserId}")
     ResponseEntity<?> addRatingByUserId(@RequestBody RatingEntity rating, @PathVariable Long staffUserId, Authentication authentication) {
@@ -45,7 +42,6 @@ public class RatingController {
             staffUserEntity.getRatings().add(newRating);
             userRepository.save(staffUserEntity);
             return ResponseEntity.ok().body(newRating);
-
         }
     }
 
