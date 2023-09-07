@@ -15,6 +15,7 @@ public interface OrderRepository extends PagingAndSortingRepository<OrderEntity,
     List<OrderEntity> findAllByUserId(UserEntity userEntity);
     List<OrderEntity> findAllByUserId(UserEntity userEntity, Pageable pageable);
     List<OrderEntity> findAllByPlaceId(PlaceEntity placeEntity);
+    List<OrderEntity> findAllByPlaceIdAndAndOrderStatus(PlaceEntity placeEntity, String orderStatus);
     List<OrderEntity> findAllByUserIdAndOrderStatus(UserEntity userEntity, EOrderStatus orderStatus, Pageable pageable);
     List<OrderEntity> findAllByPlaceIdAndAndOrderStatus(PlaceEntity placeEntity, EOrderStatus orderStatus);
 

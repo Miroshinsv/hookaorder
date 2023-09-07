@@ -53,7 +53,7 @@ public class UserEntity extends BaseEntity {
     @JsonProperty(value = "fcm_token", access = JsonProperty.Access.WRITE_ONLY)
     private String fcmToken;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinColumn
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonProperty(value = "roles", access = JsonProperty.Access.READ_ONLY)
