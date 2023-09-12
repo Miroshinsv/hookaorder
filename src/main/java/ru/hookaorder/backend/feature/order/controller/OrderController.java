@@ -180,8 +180,8 @@ public class OrderController {
     }
 
     private boolean isOrderProcessedByExecutor(OrderEntity order, Authentication authentication) {
-        var user = userRepository.findById((Long) authentication.getPrincipal()).get();
-        if (user.getRolesSet().stream().anyMatch(Arrays.asList(ERole.HOOKAH_MASTER, ERole.WAITER)::contains)) {
+        var roles = authentication.getAuthorities();
+        if (roles.contains(ERole.HOOKAH_MASTER) || roles.contains(ERole.WAITER)) {
             return userRepository.findById((Long) authentication.getPrincipal()).get().getWorkPlaces().stream().filter((place) -> place.equals(order.getPlaceId())).count() > 0;
         }
         return false;
