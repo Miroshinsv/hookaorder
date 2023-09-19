@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 @Service
 public class PushNotificationImpl implements IPushNotificationService {
   private static final int ZERO_ELEMENTS = 0;
+  private static final String EMPTY_STRING = "";
   private final FirebaseMessaging firebaseMessaging;
 
   @Autowired
@@ -81,11 +82,12 @@ public class PushNotificationImpl implements IPushNotificationService {
             FCMTokens
                 .stream()
                 .map(val -> buildMessage(val,
-                    buildUserNotification("Новый заказ".concat(order.getId().toString()),
+                    buildUserNotification("Новый заказ #".concat(order.getId().toString()),
                         String.format("Номер телефона:\n %s\nВремя:\n%s\nКомментарий:\n%s",
-                            order.getUserId().getPhone(), order.getOrderTime(), order.getComment().getText()))))
-                .collect(Collectors.toList()
-                )
+                            order.getUserId().getPhone(),
+                            order.getOrderTime(),
+                            order.getComment() != null ? order.getComment().getText() : EMPTY_STRING))))
+                .collect(Collectors.toList())
         );
   }
 
