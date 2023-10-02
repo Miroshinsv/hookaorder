@@ -21,12 +21,12 @@ public class PlaceServiceImpl implements PlaceService{
     private final UserRepository userRepository;
 
     @Override
-    public PlaceEntity create(PlaceEntity placeEntity, Authentication authentication) {
+    public Optional<PlaceEntity> create(PlaceEntity placeEntity, Authentication authentication) {
         if (!authentication.getAuthorities().contains(ERole.ADMIN)) {
             var user = userRepository.findById((Long) authentication.getPrincipal()).get();
             placeEntity.setOwner(user);
         }
-        return placeRepository.save(placeEntity);
+        return Optional.of(placeRepository.save(placeEntity));
     }
 
     @Override
