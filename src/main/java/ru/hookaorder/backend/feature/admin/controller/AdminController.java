@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import ru.hookaorder.backend.feature.order.entity.OrderEntity;
 import ru.hookaorder.backend.feature.order.service.OrderService;
 import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
+import ru.hookaorder.backend.feature.place.exception.PlaceNotCreatedException;
 import ru.hookaorder.backend.feature.place.service.PlaceService;
 import ru.hookaorder.backend.feature.user.entity.UserEntity;
 import ru.hookaorder.backend.feature.user.service.UserService;
@@ -40,7 +41,9 @@ public class AdminController {
     @PostMapping("/place/create")
     @ApiOperation("Админ: Создаем заведение")
     ResponseEntity<PlaceEntity> createPlace(@RequestBody PlaceEntity placeEntity, Authentication authentication) {
-        return ResponseEntity.ok(placeService.create(placeEntity, authentication));
+        return placeService.create(placeEntity, authentication)
+            .map(place -> ResponseEntity.ok(place))
+            .orElseThrow(() -> new PlaceNotCreatedException("couldn't create place for request body."));
     }
 
     @PostMapping("/place/update/{id}")

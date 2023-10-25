@@ -10,6 +10,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import ru.hookaorder.backend.feature.BaseEntity;
 import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
+import ru.hookaorder.backend.feature.place.exception.PlaceAccessDeniedException;
+import ru.hookaorder.backend.feature.place.exception.PlaceNotCreatedException;
+import ru.hookaorder.backend.feature.place.exception.PlaceNotFoundException;
 import ru.hookaorder.backend.feature.place.repository.PlaceRepository;
 import ru.hookaorder.backend.feature.place.service.PlaceService;
 import ru.hookaorder.backend.utils.CheckOwnerAndRolesAccess;
@@ -32,7 +35,7 @@ public class PlaceController {
         return placeRepository.findById(id)
             .map(place -> JsonUtils.checkAndApplyPhoneFilter(place, authentication))
             .map(ResponseEntity::ok)
-            .orElseGet(() -> ResponseEntity.notFound().build());
+            .orElseThrow(() -> new PlaceNotFoundException("by place ID " + id));
     }
 
     @GetMapping("/get/assigned")
@@ -59,7 +62,9 @@ public class PlaceController {
     @ApiOperation("Создаем заведение")
     @PreAuthorize("hasAnyAuthority('ADMIN','OWNER')")
     ResponseEntity<PlaceEntity> createPlace(@RequestBody PlaceEntity placeEntity, Authentication authentication) {
-        return ResponseEntity.ok(placeService.create(placeEntity, authentication));
+        return placeService.create(placeEntity, authentication)
+            .map(place -> ResponseEntity.ok(place))
+            .orElseThrow(() -> new PlaceNotCreatedException("couldn't create place for request body."));
     }
 
     @PostMapping("/update/{id}")
@@ -68,16 +73,17 @@ public class PlaceController {
     ResponseEntity<?> updatePlace(@PathVariable Long id, @RequestBody PlaceEntity placeEntity, Authentication authentication) {
         return placeService.update(id, placeEntity, authentication)
             .map(place -> ResponseEntity.ok(place))
-            .orElse(ResponseEntity.notFound().build());
+            .orElseThrow(() -> new PlaceNotFoundException("by place ID " + id));
     }
 
     @DeleteMapping("/disband/{id}")
     @ApiOperation("Удаляем заведение")
     @PreAuthorize("hasAuthority('ADMIN')")
     ResponseEntity<?> disbandById(@PathVariable Long id, Authentication authentication) {
-        return placeService.delete(id)
-            ? ResponseEntity.ok().build()
-            : ResponseEntity.notFound().build();
+        if (!placeService.delete(id)) {
+            throw new PlaceNotFoundException("by place ID " + id);
+        }
+        return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("hasAnyAuthority('ADMIN', 'OWNER')")
@@ -87,7 +93,7 @@ public class PlaceController {
             if (CheckOwnerAndRolesAccess.isOwnerOrAdmin(val, authentication)) {
                 return ResponseEntity.ok().body(val.getRatings());
             }
-            return ResponseEntity.badRequest().body("Access denied");
-        }).orElse(ResponseEntity.notFound().build());
+            throw new PlaceAccessDeniedException("user don't have OWNER or ADMIN permissions for place ID " + placeId);
+        }).orElseThrow(() -> new PlaceNotFoundException("by place ID " + placeId));
     }
 }

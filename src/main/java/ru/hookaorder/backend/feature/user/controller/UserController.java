@@ -8,6 +8,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import ru.hookaorder.backend.feature.user.entity.UserEntity;
+import ru.hookaorder.backend.feature.user.exception.UserNotCreatedException;
+import ru.hookaorder.backend.feature.user.exception.UserNotFoundException;
 import ru.hookaorder.backend.feature.user.repository.UserRepository;
 import ru.hookaorder.backend.feature.user.service.UserService;
 import ru.hookaorder.backend.utils.JsonUtils;
@@ -26,7 +28,7 @@ public class UserController {
     ResponseEntity<?> getUserById(@PathVariable Long id, Authentication authentication) {
         return userRepository.findById(id)
             .map((val) -> ResponseEntity.ok().body(JsonUtils.checkAndApplyPhoneFilter(val, authentication)))
-            .orElse(ResponseEntity.notFound().build());
+            .orElseThrow(() -> new UserNotFoundException("by user ID " + id));
     }
 
     @PostMapping(value = "/create")
@@ -34,7 +36,7 @@ public class UserController {
     ResponseEntity<?> createUser(@RequestBody UserEntity userEntity) {
         return userService.create(userEntity)
             .map(user -> ResponseEntity.ok(user))
-            .orElse(ResponseEntity.badRequest().build());
+            .orElseThrow(() -> new UserNotCreatedException("couldn't create user for request body."));
     }
 
     @PutMapping(value = "/update/{id}")
@@ -42,13 +44,14 @@ public class UserController {
     ResponseEntity<?> updateUserById(@PathVariable Long id, @RequestBody UserEntity userEntity, Authentication authentication) {
         return userService.update(id, userEntity, authentication)
             .map(user -> ResponseEntity.ok(user))
-            .orElse(ResponseEntity.notFound().build());
+            .orElseThrow(() -> new UserNotFoundException("by user ID " + id));
     }
 
     @DeleteMapping("/disable")
     @ApiOperation(value = "Деактивация аккаунта со стороны пользователя")
     ResponseEntity<?> disableByUser(Authentication authentication) {
-        UserEntity entity = userRepository.findById((Long) authentication.getPrincipal()).get();
+        UserEntity entity = userRepository.findById((Long) authentication.getPrincipal())
+            .orElseThrow(() -> new UserNotFoundException("by user ID " + authentication.getPrincipal()));;
         entity.setEnabled(false);
         userRepository.save(entity);
         return ResponseEntity.ok().build();
@@ -64,8 +67,9 @@ public class UserController {
     @PreAuthorize("hasAuthority('ADMIN')")
     @ApiOperation(value = "", hidden = true)
     ResponseEntity<?> disbandUserById(@PathVariable Long id) {
-        return userService.delete(id)
-            ? ResponseEntity.ok().build()
-            : ResponseEntity.notFound().build();
+        if (!userService.delete(id)) {
+            throw new UserNotFoundException("by user ID " + id);
+        }
+        return ResponseEntity.ok().build();
     }
 }
