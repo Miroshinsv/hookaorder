@@ -103,6 +103,9 @@ public class OrderController {
     @PostMapping("/create")
     @ApiOperation("Создание заказа")
     ResponseEntity<?> createOrder(@RequestBody OrderEntity orderEntity, Authentication authentication) {
+        if (orderEntity.getPlaceId() == null) {
+            throw new PlaceNotFoundException(" no place ID in request indicated");
+        }
         Long placeId = orderEntity.getPlaceId().getId();
         PlaceEntity place = placeRepository.findById(placeId)
             .orElseThrow(() -> new PlaceNotFoundException("by place ID " + placeId));
