@@ -9,6 +9,7 @@ import org.hibernate.annotations.Where;
 import org.hibernate.validator.constraints.URL;
 import ru.hookaorder.backend.feature.BaseEntity;
 import ru.hookaorder.backend.feature.address.entity.AddressEntity;
+import ru.hookaorder.backend.feature.image.entity.ImageEntity;
 import ru.hookaorder.backend.feature.rating.entity.RatingEntity;
 import ru.hookaorder.backend.feature.user.entity.UserEntity;
 
@@ -16,6 +17,7 @@ import javax.persistence.*;
 import javax.validation.constraints.Pattern;
 import java.text.DecimalFormat;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.DoubleStream;
 
@@ -103,4 +105,13 @@ public class PlaceEntity extends BaseEntity {
     @JoinColumn(name = "subscriber_id", referencedColumnName = "id")
     @JsonIgnore
     private Set<UserEntity> subscribers;
+
+    @Column(columnDefinition = "TEXT")
+    @JsonProperty(value = "description")
+    private String description;
+
+    @JsonIgnore
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<ImageEntity> images;
+
 }

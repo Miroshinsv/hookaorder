@@ -10,5 +10,7 @@ public interface PlaceService {
 
     Optional<PlaceEntity> update(Long id, PlaceEntity place, Authentication authentication);
 
+    Optional<String> uploadImage(Long id, String base64EncodedImage);
+
     boolean delete(Long id);
 }
