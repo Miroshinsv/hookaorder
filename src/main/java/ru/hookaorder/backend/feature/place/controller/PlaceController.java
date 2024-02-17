@@ -9,8 +9,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import ru.hookaorder.backend.feature.BaseEntity;
+import ru.hookaorder.backend.feature.image.entity.ImageRequest;
 import ru.hookaorder.backend.feature.place.entity.PlaceEntity;
 import ru.hookaorder.backend.feature.place.exception.PlaceAccessDeniedException;
+import ru.hookaorder.backend.feature.place.exception.PlaceImageNotUploadedException;
 import ru.hookaorder.backend.feature.place.exception.PlaceNotCreatedException;
 import ru.hookaorder.backend.feature.place.exception.PlaceNotFoundException;
 import ru.hookaorder.backend.feature.place.repository.PlaceRepository;
@@ -65,6 +67,16 @@ public class PlaceController {
         return placeService.create(placeEntity, authentication)
             .map(place -> ResponseEntity.ok(place))
             .orElseThrow(() -> new PlaceNotCreatedException("couldn't create place for request body."));
+    }
+
+    @PostMapping("/image_upload/{placeId}")
+    @ApiOperation("Добавляем изображение")
+    @PreAuthorize("hasAnyAuthority('ADMIN','OWNER')")
+    ResponseEntity<?> uploadImage(@PathVariable Long placeId, @RequestBody ImageRequest image) {
+        return placeService.uploadImage(placeId, image.getBase64EncodedImage())
+            .map(imageUrl -> ResponseEntity.ok(imageUrl))
+            .orElseThrow(() -> new PlaceImageNotUploadedException(
+                "wasn't able to store image for provider. Please double check base64 request string."));
     }
 
     @PostMapping("/update/{id}")

@@ -14,15 +14,15 @@ public final class HTTPClientUtils {
 
     public static HttpRequest buildRequestWithURI(String uri) throws URISyntaxException {
         return HttpRequest.newBuilder()
-                .uri(new URI(uri))
-                .GET()
-                .build();
+            .uri(new URI(uri))
+            .GET()
+            .build();
     }
 
     public static HttpResponse<String> sendRequest(HttpRequest request) throws IOException, InterruptedException {
         return HttpClient
-                .newBuilder()
-                .build()
-                .send(request, HttpResponse.BodyHandlers.ofString());
+            .newBuilder()
+            .build()
+            .send(request, HttpResponse.BodyHandlers.ofString());
     }
 }

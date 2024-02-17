@@ -9,6 +9,7 @@ import ru.hookaorder.backend.feature.order.exception.OrderInvalidStatusException
 import ru.hookaorder.backend.feature.order.exception.OrderNotCreatedException;
 import ru.hookaorder.backend.feature.order.exception.OrderNotFoundException;
 import ru.hookaorder.backend.feature.place.exception.PlaceAccessDeniedException;
+import ru.hookaorder.backend.feature.place.exception.PlaceImageNotUploadedException;
 import ru.hookaorder.backend.feature.place.exception.PlaceNotCreatedException;
 import ru.hookaorder.backend.feature.place.exception.PlaceNotFoundException;
 import ru.hookaorder.backend.feature.user.exception.UserNotCreatedException;
@@ -61,4 +62,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handlePlaceAccessDenied(PlaceAccessDeniedException ex) {
         return new ResponseEntity<>("Access to place denied: " + ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(PlaceImageNotUploadedException.class)
+    public ResponseEntity<String> handlePlaceImageNotUploaded(PlaceImageNotUploadedException ex) {
+        return new ResponseEntity<>("Image to place not uploaded: " + ex.getMessage(),
+            HttpStatus.INSUFFICIENT_STORAGE);
+    }
+
 }
