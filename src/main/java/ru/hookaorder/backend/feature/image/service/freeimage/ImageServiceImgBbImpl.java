@@ -11,29 +11,33 @@ import ru.hookaorder.backend.utils.HTTPClientUtils;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 @Service
 @Slf4j
-public class ImageServiceFreeImageImpl implements ImageService {
+public class ImageServiceImgBbImpl implements ImageService {
 
     private static final String ERROR_NULL_VALUE = null;
-    @Value("${free.image.api.key}")
-    private String freeImageAPIKey;
-    private static final String FREE_IMAGE_API_URL = "https://freeimage.host/api/1/upload";
+    @Value("${img.bb.api.key}")
+    private String imgBbAPIKey;
+    private static final String IMGBB_API_URL = "https://api.imgbb.com/1/upload";
 
     @Override
     public String uploadImage(String base64EncodedImage) {
-        String geocodeRequest = FREE_IMAGE_API_URL +
-            "&key=" + freeImageAPIKey + "&source=" + base64EncodedImage + "&format=json";
+        String geocodeRequest = IMGBB_API_URL + "?key=" + imgBbAPIKey;
         try {
+            Map<String, String> formData = Map.of("image", base64EncodedImage);
             HttpRequest request = HttpRequest.newBuilder()
                 .uri(new URI(geocodeRequest))
-                .POST(HttpRequest.BodyPublishers.ofString(""))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString(getFormDataAsString(formData)))
                 .build();
             HttpResponse<String> response = HTTPClientUtils.sendRequest(request);
-            return parseJsonFreeImageResponse(response.body());
+            return parseJsonImgBbResponse(response.body());
         } catch (URISyntaxException e) {
             log.error("Error in HTTP Request URI Syntax: " + geocodeRequest, e);
             return ERROR_NULL_VALUE;
@@ -49,8 +53,21 @@ public class ImageServiceFreeImageImpl implements ImageService {
         }
     }
 
-    private String parseJsonFreeImageResponse(String body) {
+    private String getFormDataAsString(Map<String, String> formData) {
+        StringBuilder formBodyBuilder = new StringBuilder();
+        for (Map.Entry<String, String> singleEntry : formData.entrySet()) {
+            if (formBodyBuilder.length() > 0) {
+                formBodyBuilder.append("&");
+            }
+            formBodyBuilder.append(URLEncoder.encode(singleEntry.getKey(), StandardCharsets.UTF_8));
+            formBodyBuilder.append("=");
+            formBodyBuilder.append(URLEncoder.encode(singleEntry.getValue(), StandardCharsets.UTF_8));
+        }
+        return formBodyBuilder.toString();
+    }
+
+    private String parseJsonImgBbResponse(String body) {
         JSONObject obj = new JSONObject(body);
-        return obj.getJSONObject("image").getString("url");
+        return obj.getJSONObject("data").getJSONObject("image").getString("url");
     }
 }
